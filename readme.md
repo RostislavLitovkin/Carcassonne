@@ -85,6 +85,30 @@ It is my favourite rule that will make the game just a bit more interesting!
 
 ## Specification
 
+### Player
+
+Just identified by string name
+
+### Feature
+
+City/Road/Field
+
+### Tile
+
+Has ID for Texture to use for rendering + Rotation 0/90/180/270
+
+Has 4 sides, each identified by unique ID used for tracking which features are connected together + Feature enum
+
+And in the middle there can be a Cloister -> true/false
+
+### Game State
+
+- PlaceTile - Player on turn must place a tile
+- PlaceMeeple - Player may place a meeple on the tile played
+- Finished - There are no more tiles to be placed. Score is counted and winner is determined
+
+## REST API Specification
+
 ### POST - Setup
 
 Sets up a new game
@@ -103,9 +127,31 @@ Gets the info about an ongoing game, like:
 - List of all players, and their score
 - Player that is on turn
 - Tile to be placed
+- Game State 
+- Tile last played
 - Number of tiles remaining in the draw stack
 - grid with tiles
 - grid with meeples
+
+### POST - place_tile
+
+Place a tile
+
+Parameters:
+- x coordinate
+- y coordinate
+
+### POST - place_meeple
+
+Place a meeple on the tile just played.
+
+Parameters:
+- feature id
+- field id
+
+If both feature id and field id are null, skip placing the meeple.
+
+Only 1 meeple can be placed at once. Otherwise 400 is returned
 
 ## Techstack used
 
