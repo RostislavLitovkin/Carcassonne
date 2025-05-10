@@ -1,0 +1,123 @@
+cabal-version: 2.2
+
+-- This file has been generated from package.yaml by hpack version 0.37.0.
+--
+-- see: https://github.com/sol/hpack
+
+name:           carcassonne-server
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/rostislavlitovkin/carcassonne#readme>
+homepage:       https://github.com/rostislavlitovkin/carcassonne#readme
+bug-reports:    https://github.com/rostislavlitovkin/carcassonne/issues
+author:         Rostislav Litovkin
+maintainer:     litovros@fit.cvut.cz
+copyright:      2025 Rostislav Litovkin
+license:        BSD-3-Clause
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    CHANGELOG.md
+
+source-repository head
+  type: git
+  location: https://github.com/rostislavlitovkin/carcassonne
+  subdir: carcassonne-server
+
+library
+  exposed-modules:
+      Types.Feature
+      Types.Game
+      Types.GameState
+      Types.Tile
+      Types.TileMapper
+  other-modules:
+      Paths_carcassonne_server
+  autogen-modules:
+      Paths_carcassonne_server
+  hs-source-dirs:
+      src
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -Wall
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , containers
+    , lens
+    , monad-logger
+    , mtl
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , servant
+    , servant-server
+    , servant-swagger
+    , servant-swagger-ui
+    , swagger2
+    , text
+    , time
+    , uuid
+    , warp
+  default-language: Haskell2010
+
+executable carcassonne-server-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_carcassonne_server
+  autogen-modules:
+      Paths_carcassonne_server
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , carcassonne-server
+    , containers
+    , lens
+    , monad-logger
+    , mtl
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , servant
+    , servant-server
+    , servant-swagger
+    , servant-swagger-ui
+    , swagger2
+    , text
+    , time
+    , uuid
+    , warp
+  default-language: Haskell2010
+
+test-suite carcassonne-server-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_carcassonne_server
+  autogen-modules:
+      Paths_carcassonne_server
+  hs-source-dirs:
+      test
+  ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      aeson
+    , base >=4.7 && <5
+    , carcassonne-server
+    , containers
+    , lens
+    , monad-logger
+    , mtl
+    , persistent
+    , persistent-sqlite
+    , persistent-template
+    , servant
+    , servant-server
+    , servant-swagger
+    , servant-swagger-ui
+    , swagger2
+    , text
+    , time
+    , uuid
+    , warp
+  default-language: Haskell2010
