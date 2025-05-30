@@ -125,7 +125,7 @@ git push lamdera
 Found in `tests` folder.
 
 ```
-npx elm-test
+npx elm-test --compiler lamdera
 ```
 
 ## Techstack used
