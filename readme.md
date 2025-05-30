@@ -106,9 +106,23 @@ And in the middle there can be a Cloister -> true/false
 
 **TODO**
 
+## Deploy to lamdera
+
+Add lamdera git remote:
+
+```
+git remote add lamdera git@apps.lamdera.com:carcassonne.git
+```
+
+If you push to lamdera remote, the app will get automatically deployed and updated:
+
+```
+git push lamdera
+```
+
 ## Unit tests
 
-Found in `tests` folder
+Found in `tests` folder.
 
 ```
 npx elm-test
