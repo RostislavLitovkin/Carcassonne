@@ -13,7 +13,7 @@ type alias PlayerScores =
 
 
 type alias Coordinate =
-    (Int, Int)
+    ( Int, Int )
 
 
 type alias TileGrid =
@@ -58,18 +58,17 @@ initializeGame players =
                     p
 
                 Nothing ->
+                    -- Should never happen
                     ""
 
-        -- Should never happen
         ( firstTile, drawStack ) =
             case initializeDrawStack of
                 first :: rest ->
                     ( first, rest )
 
                 [] ->
+                    -- Should never happen;
                     ( 0, [] )
-
-        -- Should never happen
     in
     { playerScores = Dict.fromList (List.map (\playerName -> ( playerName, 0 )) players)
     , players = players
@@ -78,17 +77,19 @@ initializeGame players =
     , gameState = PlaceTile
     , lastPlayedTile = Nothing
     , tileDrawStack = drawStack
-    , tileGrid = Dict.fromList [ ((0, 0), getTile 0 ) ]
+    , tileGrid = initializeTileGrid
     , meepleGrid = Dict.empty
     }
+
+
+initializeTileGrid : TileGrid
+initializeTileGrid =
+    Dict.fromList [ ( ( 0, 0 ), getTile 0 ) ]
 
 
 {-| Initialize a random tile draw stack
 -}
 initializeDrawStack : List TileId
 initializeDrawStack =
-    [ 1, 1, 1 ]
-
-
-
--- TODO: make random
+    -- TODO: make random
+    [ 1, 0, 1, 1, 0 ]

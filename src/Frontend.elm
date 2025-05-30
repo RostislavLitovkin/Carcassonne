@@ -1,6 +1,5 @@
 module Frontend exposing (Model, app)
 
-import Browser
 import Html exposing (Html, button, div, input, li, text, ul, br)
 import Html.Attributes exposing (placeholder, value)
 import Html.Events exposing (onClick, onInput, onSubmit)

@@ -1,13 +1,14 @@
 # AFP Semestral work - Carcassonne web game
 
-A multiplayer web version of popular board game Carcassonne.
+A multiplayer web version of popular board game Carcassonne built using Lamdera.
 
 Focus is on functionality and playability.
 
 ## Project structure
 
-- REST server to handle multiplayer
-- Elm website as Frontend
+- Lamdera takes care of both frontend and backend code.
+
+**TODO**
 
 ## Carcassonne overview
 
@@ -77,12 +78,6 @@ Players need to show their tile that they have drawn to all other players so tha
 
 It is my favourite rule that will make the game just a bit more interesting!
 
-# Carcassonne server
-
-## Build and run
-
-**TODO**
-
 ## Specification
 
 ### Player
@@ -107,65 +102,22 @@ And in the middle there can be a Cloister -> true/false
 - PlaceMeeple - Player may place a meeple on the tile played
 - Finished - There are no more tiles to be placed. Score is counted and winner is determined
 
-## REST API Specification
-
-### POST - Setup
-
-Sets up a new game
-
-If a game was being played, it overwrites it
-
-Parameters:
-- List of Player names
-
-### GET - game
-
-Returns null if a game does not exist.
-
-Gets the info about an ongoing game, like:
-
-- List of all players, and their score
-- Player that is on turn
-- Tile to be placed
-- Game State 
-- Tile last played
-- Number of tiles remaining in the draw stack
-- grid with tiles
-- grid with meeples
-
-### POST - place_tile
-
-Place a tile
-
-Parameters:
-- x coordinate
-- y coordinate
-
-### POST - place_meeple
-
-Place a meeple on the tile just played.
-
-Parameters:
-- feature id
-- field id
-
-If both feature id and field id are null, skip placing the meeple.
-
-Only 1 meeple can be placed at once. Otherwise 400 is returned
-
-## Techstack used
-
-**TODO**
-
-# Carcassonne web UI
-
 ## Build and run
 
 **TODO**
 
+## Unit tests
+
+Found in `tests` folder
+
+```
+npx elm-test
+```
+
 ## Techstack used
 
-**TODO**
+- Elm
+- Lamdera
 
 # Original game 
 
