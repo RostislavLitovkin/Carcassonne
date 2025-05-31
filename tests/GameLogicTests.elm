@@ -3,6 +3,7 @@ module GameLogicTests exposing (..)
 import Expect
 import Helpers.GameLogic exposing (..)
 import Helpers.TileMapper exposing (..)
+import Set
 import Test exposing (..)
 import Types.Feature exposing (..)
 import Types.Game exposing (initializeTileGrid)
@@ -52,7 +53,7 @@ isRotatedCorrectlyTest =
 tileCanBePlacedTest : Test
 tileCanBePlacedTest =
     describe "tileCanBePlaced"
-        [ test "Tile with path can be placed 1" <|
+        [ test "Tile with road can be placed 1" <|
             \_ ->
                 let
                     tileToBePlaced =
@@ -65,7 +66,7 @@ tileCanBePlacedTest =
                         ( -1, 0 )
                 in
                 Expect.equal (tileCanBePlaced tileGrid tileToBePlaced coordinates) True
-        , test "Tile with path can be placed 2" <|
+        , test "Tile with road can be placed 2" <|
             \_ ->
                 let
                     tileToBePlaced =
@@ -104,7 +105,7 @@ tileCanBePlacedTest =
                         ( 0, 1 )
                 in
                 Expect.equal (tileCanBePlaced tileGrid tileToBePlaced coordinates) True
-        , test "Tile with field can not be placed next to path 1" <|
+        , test "Tile with field can not be placed next to road 1" <|
             \_ ->
                 let
                     tileToBePlaced =
@@ -117,7 +118,7 @@ tileCanBePlacedTest =
                         ( -1, 0 )
                 in
                 Expect.equal (tileCanBePlaced tileGrid tileToBePlaced coordinates) False
-        , test "Tile with field can not be placed next to path 2" <|
+        , test "Tile with field can not be placed next to road 2" <|
             \_ ->
                 let
                     tileToBePlaced =
@@ -130,4 +131,60 @@ tileCanBePlacedTest =
                         ( 1, 0 )
                 in
                 Expect.equal (tileCanBePlaced tileGrid tileToBePlaced coordinates) False
+        ]
+
+
+getCoordinatesToBePlacedOnTest : Test
+getCoordinatesToBePlacedOnTest =
+    describe "getCoordinatesToBePlacedOn"
+        [ test "Tile to be placed on coordinates 1" <|
+            \_ ->
+                let
+                    tileToBePlaced =
+                        getTile 1
+
+                    tileGrid =
+                        initializeTileGrid
+                in
+                Expect.equal (getCoordinatesToBePlacedOn tileGrid tileToBePlaced) (Set.fromList [ ( 1, 0 ), ( 0, -1 ) ])
+        , test "Tile to be placed on coordinates 2" <|
+            \_ ->
+                let
+                    tileToBePlaced =
+                        rotateLeft <| getTile 1
+
+                    tileGrid =
+                        initializeTileGrid
+                in
+                Expect.equal (getCoordinatesToBePlacedOn tileGrid tileToBePlaced) (Set.fromList [ ( -1, 0 ), ( 0, -1 ) ])
+        , test "Tile to be placed on coordinates 3" <|
+            \_ ->
+                let
+                    tileToBePlaced =
+                        getTile 0
+
+                    tileGrid =
+                        initializeTileGrid
+                in
+                Expect.equal (getCoordinatesToBePlacedOn tileGrid tileToBePlaced) (Set.fromList [ ( -1, 0 ), ( 1, 0 ) ])
+        , test "Tile to be placed on coordinates 4" <|
+            \_ ->
+                let
+                    tileToBePlaced =
+                        rotateLeft <| rotateLeft <| getTile 0
+
+                    tileGrid =
+                        initializeTileGrid
+                in
+                Expect.equal (getCoordinatesToBePlacedOn tileGrid tileToBePlaced) (Set.fromList [ ( -1, 0 ), ( 0, -1 ), ( 1, 0 ), ( 0, 1 ) ])
+        , test "Tile to be placed on coordinates 5" <|
+            \_ ->
+                let
+                    tileToBePlaced =
+                        rotateLeft <| getTile 0
+
+                    tileGrid =
+                        initializeTileGrid
+                in
+                Expect.equal (getCoordinatesToBePlacedOn tileGrid tileToBePlaced) (Set.fromList [])
         ]

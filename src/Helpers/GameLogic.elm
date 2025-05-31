@@ -3,9 +3,11 @@ module Helpers.GameLogic exposing (..)
 import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import Maybe
+import Set exposing (Set)
+import Tuple exposing (first, second)
 import Types.Game exposing (..)
 import Types.Tile exposing (..)
-import Tuple exposing (first, second)
+
 
 rotateLeft : Tile -> Tile
 rotateLeft rest =
@@ -102,4 +104,25 @@ tileCanBePlaced tileGrid tile coordinates =
                 |> Maybe.map (\t -> t.east.sideFeature == tile.west.sideFeature)
                 |> Maybe.withDefault True
            )
-           
+
+
+getCoordinatesToBePlacedOn : TileGrid -> Tile -> Set Coordinate
+getCoordinatesToBePlacedOn tileGrid tile =
+    let
+        occupiedCoords =
+            Dict.keys tileGrid
+
+        adjacentCoords =
+            occupiedCoords
+                |> List.concatMap
+                    (\( x, y ) ->
+                        [ ( x + 1, y )
+                        , ( x - 1, y )
+                        , ( x, y + 1 )
+                        , ( x, y - 1 )
+                        ]
+                    )
+                |> List.filter (\coord -> Dict.get coord tileGrid == Nothing)
+                |> Set.fromList
+    in
+    Set.filter (tileCanBePlaced tileGrid tile) adjacentCoords
