@@ -80,6 +80,9 @@ update msg model =
         ( FePlaceTile coordinates, _ ) ->
             ( model, sendToBackend <| PlaceTile coordinates )
 
+        ( FeTerminateGame, _ ) ->
+            ( model, sendToBackend TerminateGame )
+
         _ ->
             ( model, Cmd.none )
 
@@ -99,6 +102,14 @@ updateFromBackend msg model =
                 , Cmd.none
                 )
 
+        ( JoinedGame { game }, FeLobby { playerName } ) ->
+            ( FeGamePlayed
+                { playerName = playerName
+                , game = game
+                }
+            , Cmd.none
+            )
+
         ( GameInitialized { game }, FeLobby { playerName } ) ->
             ( FeGamePlayed
                 { playerName = playerName
@@ -114,6 +125,9 @@ updateFromBackend msg model =
                 }
             , Cmd.none
             )
+
+        ( GameTerminated, FeGamePlayed _ ) ->
+            init
 
         _ ->
             ( model, Cmd.none )
@@ -313,6 +327,16 @@ renderSideBar game playerName =
                     , style "cursor" "pointer"
                     ]
                     [ text "Rotate Tile" ]
+               , button
+                    [ onClick FeTerminateGame
+                    , style "margin-top" "16px"
+                    , style "padding" "8px 16px"
+                    , style "background-color" "#666"
+                    , style "color" "white"
+                    , style "border" "none"
+                    , style "cursor" "pointer"
+                    ]
+                    [ text "Terminate Game" ]
                ]
         )
 

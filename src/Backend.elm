@@ -59,6 +59,11 @@ updateFromFrontend sessionId clientId msg model =
                 , broadcast (PlayerRegistrationUpdated { players = newPlayers })
                 )
 
+        ( RegisterPlayer _, BeGamePlayed { game } ) ->
+            ( model
+            , sendToFrontend clientId (JoinedGame { game = game })
+            )
+
         ( KickPlayer playerName, BePlayerRegistration { players } ) ->
             let
                 newPlayers =
@@ -93,6 +98,11 @@ updateFromFrontend sessionId clientId msg model =
             in
             ( BeGamePlayed { game = updatedGame }
             , broadcast (UpdateGameState { game = updatedGame })
+            )
+
+        ( TerminateGame, BeGamePlayed _ ) ->
+            ( BePlayerRegistration { players = [] }
+            , broadcast GameTerminated
             )
 
         _ ->

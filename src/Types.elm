@@ -39,6 +39,7 @@ type FrontendMsg
     | FeInitializeGame
     | FeRotateTileLeft
     | FePlaceTile Coordinate
+    | FeTerminateGame
     | ClearError
     | FNoop
 
@@ -49,6 +50,7 @@ type ToBackend
     | InitializeGame
     | RotateTileLeft
     | PlaceTile Coordinate
+    | TerminateGame
 
 
 type BackendMsg
@@ -70,3 +72,7 @@ type ToFrontend
     | UpdateGameState
         { game : Game
         }
+    | JoinedGame
+        { game : Game
+        }
+    | GameTerminated
