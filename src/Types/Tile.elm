@@ -30,4 +30,4 @@ type alias Tile =
 
 getTileImageSource : TileId -> String
 getTileImageSource tileId =
-    "/Tiles/tile" ++ String.fromInt tileId ++ ".png"
+    "/tile" ++ String.fromInt tileId ++ ".png"
