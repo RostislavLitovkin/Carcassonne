@@ -35,9 +35,10 @@ type alias Game =
     { playerScores : PlayerScores
     , players : List PlayerName
     , currentPlayer : PlayerName
-    , tileToPlace : TileId
+    , tileToPlace : Tile
     , gameState : GameState
     , lastPlayedTile : Maybe Coordinate
+    , nextSideId : SideId
     , tileDrawStack : List TileId
     , tileGrid : TileGrid
     , meepleGrid : MeepleGrid
@@ -69,15 +70,19 @@ initializeGame players =
                 [] ->
                     -- Should never happen;
                     ( 0, [] )
+
+        tileGrid =
+            initializeTileGrid
     in
     { playerScores = Dict.fromList (List.map (\playerName -> ( playerName, 0 )) players)
     , players = players
     , currentPlayer = currentPlayer
-    , tileToPlace = firstTile
+    , tileToPlace = getTile firstTile
     , gameState = PlaceTile
     , lastPlayedTile = Nothing
+    , nextSideId = getNextSideId tileGrid
     , tileDrawStack = drawStack
-    , tileGrid = initializeTileGrid
+    , tileGrid = tileGrid
     , meepleGrid = Dict.empty
     }
 
@@ -85,6 +90,18 @@ initializeGame players =
 initializeTileGrid : TileGrid
 initializeTileGrid =
     Dict.fromList [ ( ( 0, 0 ), getTile 0 ) ]
+
+
+{-| Helper function useful when implementing other expansions that use a different starting piece
+-}
+getNextSideId : TileGrid -> SideId
+getNextSideId tileGrid =
+    tileGrid
+        |> Dict.values
+        |> List.map (\tile -> List.maximum [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId ] |> Maybe.withDefault 0)
+        |> List.maximum
+        |> Maybe.withDefault 0
+        |> (+) 1
 
 
 {-| Initialize a random tile draw stack

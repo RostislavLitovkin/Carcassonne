@@ -7,8 +7,12 @@ type alias TileId =
     Int
 
 
+type alias SideId =
+    Int
+
+
 type alias Side =
-    { sideId : Int
+    { sideId : SideId
     , sideFeature : Feature
     }
 
@@ -22,3 +26,8 @@ type alias Tile =
     , west : Side
     , hasCloister : Bool
     }
+
+
+getTileImageSource : TileId -> String
+getTileImageSource tileId =
+    "../Tiles/tile" ++ String.fromInt tileId ++ ".png"

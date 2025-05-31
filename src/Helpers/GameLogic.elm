@@ -126,3 +126,54 @@ getCoordinatesToBePlacedOn tileGrid tile =
                 |> Set.fromList
     in
     Set.filter (tileCanBePlaced tileGrid tile) adjacentCoords
+
+
+updateSideId : TileGrid -> SideId -> SideId -> TileGrid
+updateSideId tileGrid idToReplace id =
+    let
+        updateSide side =
+            if side.sideId == idToReplace then
+                { side | sideId = id }
+
+            else
+                side
+    in
+    -- optimisation: Ignore rewriting fields that are not supposed to have sideId
+    if idToReplace == -1 then
+        tileGrid
+
+    else
+        Dict.map
+            (\_ tile ->
+                { tile
+                    | north = updateSide tile.north
+                    , east = updateSide tile.east
+                    , south = updateSide tile.south
+                    , west = updateSide tile.west
+                }
+            )
+            tileGrid
+
+
+placeTile : Game -> Coordinate -> Game
+placeTile game coordinates =
+    let
+        -- update sideId
+        -- TODO
+        --
+        tileGrid =
+            Dict.insert coordinates game.tileToPlace game.tileGrid
+
+        ( nextTile, drawStack ) =
+            case game.tileDrawStack of
+                first :: rest ->
+                    ( first, rest )
+
+                [] ->
+                    ( 0, [] )
+    in
+    { game
+        | tileGrid = tileGrid
+        , tileToPlace = getTile nextTile
+        , tileDrawStack = drawStack
+    }
