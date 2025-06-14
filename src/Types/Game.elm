@@ -8,8 +8,12 @@ import Types.PlayerName exposing (..)
 import Types.Tile exposing (..)
 
 
+type alias Score =
+    Int
+
+
 type alias PlayerScores =
-    Dict PlayerName Int
+    Dict PlayerName Score
 
 
 type alias Coordinate =
@@ -98,7 +102,7 @@ getNextSideId : TileGrid -> SideId
 getNextSideId tileGrid =
     tileGrid
         |> Dict.values
-        |> List.map (\tile -> List.maximum [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId ] |> Maybe.withDefault 0)
+        |> List.map getTileMaximumSideId
         |> List.maximum
         |> Maybe.withDefault 0
         |> (+) 1

@@ -9,6 +9,8 @@ import Types.Game exposing (..)
 import Types.Tile exposing (..)
 
 
+{-| Rotares the tile by 90 degrees to the left (90 degrees counterclockwise)
+-}
 rotateLeft : Tile -> Tile
 rotateLeft rest =
     { rest
@@ -20,6 +22,8 @@ rotateLeft rest =
     }
 
 
+{-| Checks that the tile is rotated correctly along with its features
+-}
 isRotatedCorrectly : Tile -> Bool
 isRotatedCorrectly tile =
     let
@@ -71,6 +75,8 @@ isRotatedCorrectly tile =
             False
 
 
+{-| Checks if a tile can be placed on a given coordinate
+-}
 tileCanBePlaced : TileGrid -> Tile -> Coordinate -> Bool
 tileCanBePlaced tileGrid tile coordinates =
     let
@@ -106,6 +112,8 @@ tileCanBePlaced tileGrid tile coordinates =
            )
 
 
+{-| Get a set of all coordinates where it is possible to place the given tile (with it's current rotation)
+-}
 getCoordinatesToBePlacedOn : TileGrid -> Tile -> Set Coordinate
 getCoordinatesToBePlacedOn tileGrid tile =
     let
@@ -128,9 +136,17 @@ getCoordinatesToBePlacedOn tileGrid tile =
     Set.filter (tileCanBePlaced tileGrid tile) adjacentCoords
 
 
-updateSideId : TileGrid -> SideId -> SideId -> TileGrid
-updateSideId tileGrid idToReplace id =
+{-| Replaces all SideIds for a different SideId.
+
+Returns the updated TileGrid
+
+-}
+replaceSideId : Maybe SideId -> SideId -> TileGrid -> TileGrid
+replaceSideId maybeIdToReplace id tileGrid =
     let
+        idToReplace =
+            Maybe.withDefault -1 maybeIdToReplace
+
         updateSide side =
             if side.sideId == idToReplace then
                 { side | sideId = id }
@@ -139,7 +155,7 @@ updateSideId tileGrid idToReplace id =
                 side
     in
     -- optimisation: Ignore rewriting fields that are not supposed to have sideId
-    if idToReplace == -1 then
+    if maybeIdToReplace == Nothing || idToReplace == -1 then
         tileGrid
 
     else
@@ -155,15 +171,96 @@ updateSideId tileGrid idToReplace id =
             tileGrid
 
 
+{-| Count score for a featured.
+
+Prerequisite: You probably want to count only score for a finished feature.
+
+-}
+countFeature : TileGrid -> SideId -> Score
+countFeature tileGrid sideId =
+    if sideId == -1 then
+        0
+
+    else
+        Dict.filter
+            (\_ tile ->
+                tile.north.sideId
+                    == sideId
+                    || tile.east.sideId
+                    == sideId
+            )
+            tileGrid
+            |> Dict.size
+
+
+{-| Checks if the feature is finished
+-}
+isFeatureFinished : TileGrid -> SideId -> Bool
+isFeatureFinished grid sideId =
+    Dict.toList grid
+        |> List.all
+            (\( ( x, y ), tile ) ->
+                (tile.north.sideId /= sideId || Dict.get ( x, y + 1 ) grid /= Nothing)
+                    && (tile.east.sideId /= sideId || Dict.get ( x + 1, y ) grid /= Nothing)
+                    && (tile.south.sideId /= sideId || Dict.get ( x, y - 1 ) grid /= Nothing)
+                    && (tile.west.sideId /= sideId || Dict.get ( x - 1, y ) grid /= Nothing)
+            )
+
+
+{-| Count score for cloister
+
+Prerequisite: The entered coordinate should be a tile with cloister
+
+-}
+countCloister : TileGrid -> Coordinate -> Score
+countCloister grid ( x, y ) =
+    [ Dict.get ( x + 1, y + 1 ) grid
+    , Dict.get ( x, y + 1 ) grid
+    , Dict.get ( x - 1, y + 1 ) grid
+    , Dict.get ( x + 1, y ) grid
+    , Dict.get ( x - 1, y ) grid
+    , Dict.get ( x + 1, y - 1 ) grid
+    , Dict.get ( x, y - 1 ) grid
+    , Dict.get ( x - 1, y - 1 ) grid
+    ]
+        |> List.filter (\tile -> tile /= Nothing)
+        |> List.length
+        |> (+) 1
+
+
 placeTile : Game -> Coordinate -> Game
-placeTile game coordinates =
+placeTile game ( x, y ) =
     let
-        -- update sideId
+        -- Update the tile to have correct new sideId
+        tileToPlace =
+            updateSideIds game.nextSideId game.tileToPlace
+
+        -- get adjacent tile sideIds
+        northernAdjacentSideId =
+            game.tileGrid |> Dict.get ( x, y + 1 ) |> Maybe.andThen (\t -> Just t.south.sideId)
+
+        easternAdjacentSideId =
+            game.tileGrid |> Dict.get ( x + 1, y ) |> Maybe.andThen (\t -> Just t.west.sideId)
+
+        southernAdjacentSideId =
+            game.tileGrid |> Dict.get ( x, y - 1 ) |> Maybe.andThen (\t -> Just t.north.sideId)
+
+        westernAdjacentSideId =
+            game.tileGrid |> Dict.get ( x - 1, y ) |> Maybe.andThen (\t -> Just t.east.sideId)
+
+        -- Place tile and update sideIds
+        tileGrid =
+            game.tileGrid
+                |> Dict.insert ( x, y ) tileToPlace
+                |> replaceSideId northernAdjacentSideId tileToPlace.north.sideId
+                |> replaceSideId easternAdjacentSideId tileToPlace.east.sideId
+                |> replaceSideId southernAdjacentSideId tileToPlace.south.sideId
+                |> replaceSideId westernAdjacentSideId tileToPlace.west.sideId
+
+        -- Update score
         -- TODO
         --
-        tileGrid =
-            Dict.insert coordinates game.tileToPlace game.tileGrid
-
+        -- Update draw stack
         ( nextTile, drawStack ) =
             case game.tileDrawStack of
                 first :: rest ->
@@ -176,4 +273,5 @@ placeTile game coordinates =
         | tileGrid = tileGrid
         , tileToPlace = getTile nextTile
         , tileDrawStack = drawStack
+        , nextSideId = getTileMaximumSideId tileToPlace
     }
