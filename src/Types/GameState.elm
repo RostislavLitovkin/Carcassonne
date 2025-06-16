@@ -1,7 +1,7 @@
-module Types.GameState exposing (GameState(..))
+module Types.GameState exposing (..)
 
 
 type GameState
-    = PlaceTile
-    | PlaceMeeple
-    | Finished
+    = PlaceTileState
+    | PlaceMeepleState
+    | FinishedState

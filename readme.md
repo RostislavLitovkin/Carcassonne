@@ -104,7 +104,9 @@ And in the middle there can be a Cloister -> true/false
 
 ## Build and run
 
-**TODO**
+```
+lamdera live
+```
 
 ## Deploy to lamdera
 

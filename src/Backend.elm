@@ -1,6 +1,6 @@
 module Backend exposing (..)
 
-import Helpers.GameLogic exposing (placeTile, rotateLeft)
+import Helpers.GameLogic exposing (placeMeeple, placeTile, rotateLeft)
 import Lamdera exposing (ClientId, SessionId, broadcast, sendToFrontend)
 import Types exposing (..)
 import Types.Game exposing (initializeGame)
@@ -95,6 +95,15 @@ updateFromFrontend sessionId clientId msg model =
             let
                 updatedGame =
                     placeTile game coordinates
+            in
+            ( BeGamePlayed { game = updatedGame }
+            , broadcast (UpdateGameState { game = updatedGame })
+            )
+
+        ( PlaceMeeple position, BeGamePlayed { game } ) ->
+            let
+                updatedGame =
+                    placeMeeple game position
             in
             ( BeGamePlayed { game = updatedGame }
             , broadcast (UpdateGameState { game = updatedGame })

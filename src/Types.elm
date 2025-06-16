@@ -1,11 +1,8 @@
 module Types exposing (..)
 
-import Browser exposing (UrlRequest)
-import Browser.Navigation exposing (Key)
 import Lamdera exposing (ClientId, SessionId)
-import Types.Game exposing (Coordinate, Game)
+import Types.Game exposing (Coordinate, Game, MeeplePosition)
 import Types.PlayerName exposing (..)
-import Url exposing (Url)
 
 
 type BackendModel
@@ -28,6 +25,7 @@ type FrontendModel
         }
     | FeGamePlayed
         { playerName : PlayerName
+        , debugMode : Bool
         , game : Game
         }
 
@@ -38,7 +36,9 @@ type FrontendMsg
     | Kick PlayerName
     | FeInitializeGame
     | FeRotateTileLeft
+    | ChangeDebugMode
     | FePlaceTile Coordinate
+    | FePlaceMeeple MeeplePosition
     | FeTerminateGame
     | ClearError
     | FNoop
@@ -50,6 +50,7 @@ type ToBackend
     | InitializeGame
     | RotateTileLeft
     | PlaceTile Coordinate
+    | PlaceMeeple MeeplePosition
     | TerminateGame
 
 

@@ -25,7 +25,7 @@ type alias Tile =
     , east : Side
     , south : Side
     , west : Side
-    , hasCloister : Bool
+    , cloister : Maybe SideId
     }
 
 
@@ -43,7 +43,12 @@ getTileSideIds tile =
 
 getAllSides : Tile -> List SideId
 getAllSides tile =
-    [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId ]
+    case tile.cloister of
+        Nothing ->
+            [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId ]
+
+        Just cloisterSideId ->
+            [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId, cloisterSideId ]
 
 
 updateSideIds : SideId -> Tile -> Tile
@@ -63,6 +68,7 @@ updateSideIds minimumSideId tile =
         , east = updateSide tile.east
         , south = updateSide tile.south
         , west = updateSide tile.west
+        , cloister = Maybe.map ((+) minimumSideId) tile.cloister
     }
 
 

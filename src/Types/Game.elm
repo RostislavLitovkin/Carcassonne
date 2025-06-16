@@ -1,5 +1,6 @@
 module Types.Game exposing (..)
 
+import Array exposing (Array)
 import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import List
@@ -9,6 +10,10 @@ import Types.Tile exposing (..)
 
 
 type alias Score =
+    Int
+
+
+type alias PlayerIndex =
     Int
 
 
@@ -24,28 +29,66 @@ type alias TileGrid =
     Dict Coordinate Tile
 
 
+type MeeplePosition
+    = Center
+    | North
+    | East
+    | South
+    | West
+    | Skip
+
+
+compareMeeplePosition : MeeplePosition -> MeeplePosition -> Order
+compareMeeplePosition a b =
+    let
+        meeplePositionToInt position =
+            case position of
+                Center ->
+                    0
+
+                North ->
+                    1
+
+                East ->
+                    2
+
+                South ->
+                    3
+
+                West ->
+                    4
+
+                Skip ->
+                    5
+    in
+    compare (meeplePositionToInt a) (meeplePositionToInt b)
+
+
 type alias Meeple =
-    { owner : PlayerName
+    { owner : PlayerIndex
+    , coordinates : Coordinate
+    , position : MeeplePosition
 
     -- More meeple properties might be useful when adding Carcassonne expansions (Type: Large meeple / pig...)
     }
 
 
-type alias MeepleGrid =
-    Dict Coordinate Meeple
+type alias Meeples =
+    Dict SideId (List Meeple)
 
 
 type alias Game =
     { playerScores : PlayerScores
-    , players : List PlayerName
-    , currentPlayer : PlayerName
+    , playerMeeples : Dict PlayerName Int
+    , players : Array PlayerName
+    , currentPlayer : PlayerIndex
     , tileToPlace : Tile
     , gameState : GameState
-    , lastPlayedTile : Maybe Coordinate
+    , lastPlacedTile : Coordinate
     , nextSideId : SideId
     , tileDrawStack : List TileId
     , tileGrid : TileGrid
-    , meepleGrid : MeepleGrid
+    , meeples : Meeples
     }
 
 
@@ -57,15 +100,6 @@ Players list must not be empty
 initializeGame : List PlayerName -> Game
 initializeGame players =
     let
-        currentPlayer =
-            case List.head players of
-                Just p ->
-                    p
-
-                Nothing ->
-                    -- Should never happen
-                    ""
-
         ( firstTile, drawStack ) =
             case initializeDrawStack of
                 first :: rest ->
@@ -79,16 +113,34 @@ initializeGame players =
             initializeTileGrid
     in
     { playerScores = Dict.fromList (List.map (\playerName -> ( playerName, 0 )) players)
-    , players = players
-    , currentPlayer = currentPlayer
+    , playerMeeples = Dict.fromList (List.map (\playerName -> ( playerName, 7 )) players)
+    , players = Array.fromList players
+    , currentPlayer = 0
     , tileToPlace = getTile firstTile
-    , gameState = PlaceTile
-    , lastPlayedTile = Nothing
+    , gameState = PlaceTileState
+    , lastPlacedTile = ( 0, 0 )
     , nextSideId = getNextSideId tileGrid
     , tileDrawStack = drawStack
     , tileGrid = tileGrid
-    , meepleGrid = Dict.empty
+    , meeples = Dict.empty
     }
+
+
+getNextPlayer : Game -> PlayerIndex
+getNextPlayer game =
+    if game.currentPlayer + 1 == Array.length game.players then
+        0
+
+    else
+        game.currentPlayer + 1
+
+
+getLastPlacedTile : Game -> Tile
+getLastPlacedTile game =
+    game.tileGrid
+        |> Dict.get game.lastPlacedTile
+        -- Should never happen
+        |> Maybe.withDefault (getTile 0)
 
 
 initializeTileGrid : TileGrid
@@ -113,4 +165,33 @@ getNextSideId tileGrid =
 initializeDrawStack : List TileId
 initializeDrawStack =
     -- TODO: make random
-    [ 1, 0, 1, 1, 0 ]
+    [ 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1 ]
+
+
+meepleColorDictionary : Dict Int String
+meepleColorDictionary =
+    Dict.fromList
+        [ ( 0, "red" )
+        , ( 1, "blue" )
+        , ( 2, "green" )
+        , ( 3, "yellow" )
+        , ( 4, "black" )
+        ]
+
+
+getMeepleImageSource : Int -> String
+getMeepleImageSource playerIndex =
+    meepleColorDictionary
+        |> Dict.get playerIndex
+        |> Maybe.map (\color -> "/" ++ color ++ ".png")
+        |> Maybe.withDefault "/black.png"
+
+
+toMeeplePositions : Meeples -> Dict ( Int, Int ) Meeple
+toMeeplePositions meeples =
+    meeples
+        |> Dict.toList
+        |> List.map (\( _, meeplesList ) -> meeplesList)
+        |> List.concat
+        |> List.map (\meeple -> ( meeple.coordinates, meeple ))
+        |> Dict.fromList

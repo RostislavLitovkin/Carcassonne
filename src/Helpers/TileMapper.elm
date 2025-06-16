@@ -14,7 +14,7 @@ getTile tileId =
             , east = { sideId = 1, sideFeature = Road }
             , south = { sideId = -1, sideFeature = Field }
             , west = { sideId = 1, sideFeature = Road }
-            , hasCloister = False
+            , cloister = Nothing
             }
 
         1 ->
@@ -24,7 +24,7 @@ getTile tileId =
             , east = { sideId = -1, sideFeature = Field }
             , south = { sideId = 0, sideFeature = Road }
             , west = { sideId = 0, sideFeature = Road }
-            , hasCloister = False
+            , cloister = Nothing
             }
 
         2 ->
@@ -34,7 +34,7 @@ getTile tileId =
             , east = { sideId = -1, sideFeature = Field }
             , south = { sideId = 0, sideFeature = Road }
             , west = { sideId = -1, sideFeature = Field }
-            , hasCloister = False
+            , cloister = Nothing
             }
 
         _ ->
