@@ -165,7 +165,32 @@ getNextSideId tileGrid =
 initializeDrawStack : List TileId
 initializeDrawStack =
     -- TODO: make random
-    [ 1, 0, 1, 1, 0, 1, 1, 0, 1, 0, 1, 1 ]
+    List.concat
+        [ List.repeat 3 0
+        , List.repeat 9 1
+        , List.repeat 8 2
+        , List.repeat 4 3
+        , List.repeat 2 4
+        , List.repeat 1 5
+        , List.repeat 3 6
+        , List.repeat 1 7
+        , List.repeat 1 8
+        , List.repeat 2 9
+        , List.repeat 3 10
+        , List.repeat 5 11
+        , List.repeat 3 12
+        , List.repeat 2 13
+        , List.repeat 2 14
+        , List.repeat 1 15
+        , List.repeat 2 16
+        , List.repeat 3 17
+        , List.repeat 2 18
+        , List.repeat 3 19
+        , List.repeat 3 20
+        , List.repeat 3 21
+        , List.repeat 4 22
+        , List.repeat 1 23
+        ]
 
 
 meepleColorDictionary : Dict Int String
