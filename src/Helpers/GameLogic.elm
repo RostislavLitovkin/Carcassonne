@@ -345,23 +345,9 @@ placeTile game ( x, y ) =
                 |> replaceMeepleSideId easternAdjacentSideId tileToPlace.east.sideId
                 |> replaceMeepleSideId southernAdjacentSideId tileToPlace.south.sideId
                 |> replaceMeepleSideId westernAdjacentSideId tileToPlace.west.sideId
-
-        -- Update score
-        -- TODO
-        --
-        -- Update draw stack
-        ( nextTile, drawStack ) =
-            case game.tileDrawStack of
-                first :: rest ->
-                    ( first, rest )
-
-                [] ->
-                    ( 0, [] )
     in
     { game
         | tileGrid = tileGrid
-        , tileToPlace = getTile nextTile
-        , tileDrawStack = drawStack
         , nextSideId = getTileMaximumSideId tileToPlace
         , gameState = PlaceMeepleState
         , meeples = meeples

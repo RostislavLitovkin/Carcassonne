@@ -3,6 +3,7 @@ module Types exposing (..)
 import Lamdera exposing (ClientId, SessionId)
 import Types.Game exposing (Coordinate, Game, MeeplePosition)
 import Types.PlayerName exposing (..)
+import Types.Tile exposing (SideId)
 
 
 type BackendModel
@@ -56,6 +57,8 @@ type ToBackend
 
 type BackendMsg
     = ClientConnected SessionId ClientId
+    | InitializeGameAndTileDrawStackShuffled (List SideId)
+    | TileDrawStackShuffled (List SideId)
     | NoOpBackendMsg
 
 

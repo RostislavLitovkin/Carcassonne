@@ -100,15 +100,6 @@ Players list must not be empty
 initializeGame : List PlayerName -> Game
 initializeGame players =
     let
-        ( firstTile, drawStack ) =
-            case initializeDrawStack of
-                first :: rest ->
-                    ( first, rest )
-
-                [] ->
-                    -- Should never happen;
-                    ( 0, [] )
-
         tileGrid =
             initializeTileGrid
     in
@@ -116,11 +107,13 @@ initializeGame players =
     , playerMeeples = Dict.fromList (List.map (\playerName -> ( playerName, 7 )) players)
     , players = Array.fromList players
     , currentPlayer = 0
-    , tileToPlace = getTile firstTile
+
+    -- Will get replaced by random tile anyways
+    , tileToPlace = getTile 0
     , gameState = PlaceTileState
     , lastPlacedTile = ( 0, 0 )
     , nextSideId = getNextSideId tileGrid
-    , tileDrawStack = drawStack
+    , tileDrawStack = initializeDrawStack
     , tileGrid = tileGrid
     , meeples = Dict.empty
     }

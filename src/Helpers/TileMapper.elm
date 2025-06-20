@@ -220,10 +220,10 @@ getTile tileId =
         21 ->
             { tileId = 21
             , rotation = 0
-            , north = { sideId = 0, sideFeature = Road }
-            , east = { sideId = 0, sideFeature = Road }
-            , south = { sideId = 0, sideFeature = Road }
-            , west = { sideId = 0, sideFeature = Road }
+            , north = { sideId = 0, sideFeature = City }
+            , east = { sideId = 1, sideFeature = Road }
+            , south = { sideId = 2, sideFeature = Road }
+            , west = { sideId = 3, sideFeature = Road }
             , cloister = Nothing
             }
 
