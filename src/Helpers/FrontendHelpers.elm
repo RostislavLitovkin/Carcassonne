@@ -1,11 +1,13 @@
 module Helpers.FrontendHelpers exposing (..)
 
 import Dict exposing (Dict)
+import Helpers.GameLogic exposing (rotateLeft)
+import Helpers.TileMapper exposing (getTile)
 import Set exposing (Set)
 import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (Meeples, TileGrid)
 import Types.Meeple exposing (..)
-import Types.Tile exposing (Tile, getAllSides)
+import Types.Tile exposing (Tile, TileId, getAllSides)
 
 
 {-| Converts meeples into a Coordinate to Meeple Dictionary
@@ -95,3 +97,36 @@ getCoordinatesToBePlacedOn tileGrid tile =
                 |> Set.fromList
     in
     Set.filter (tileCanBePlaced tileGrid tile) adjacentCoords
+
+
+{-| Checks all rotations and all coordintes where to place a tile.
+
+If the tile can not be placed anywhere, it returns false, otherwise true.
+
+Useful to know if the tile from the drawstack can be placed anywhere, otherwise you want to draw a new tile.
+
+-}
+tileCanBePlacedAnywhere : TileGrid -> Tile -> Bool
+tileCanBePlacedAnywhere tileGrid tile =
+    [ tile
+    , rotateLeft tile
+    , rotateLeft <| rotateLeft tile
+    , rotateLeft <| rotateLeft <| rotateLeft tile
+    ]
+        |> List.any (\rotatedTile -> getCoordinatesToBePlacedOn tileGrid rotatedTile |> Set.isEmpty |> not)
+
+
+{-| Gets next tile from the TileDrawStack, making sure it is playable.
+-}
+getPlayableTileFromDrawstack : TileGrid -> List TileId -> ( Maybe TileId, List TileId )
+getPlayableTileFromDrawstack tileGrid tileDrawStack =
+    case tileDrawStack of
+        first :: rest ->
+            if tileCanBePlacedAnywhere tileGrid (getTile first) then
+                ( Just first, rest )
+
+            else
+                getPlayableTileFromDrawstack tileGrid rest
+
+        [] ->
+            ( Nothing, [] )

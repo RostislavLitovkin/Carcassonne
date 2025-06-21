@@ -1,12 +1,13 @@
 module Backend exposing (..)
 
-import Helpers.GameLogic exposing (placeMeeple, placeTile, rotateLeft)
+import Helpers.FrontendHelpers exposing (getPlayableTileFromDrawstack)
+import Helpers.GameLogic exposing (finishGame, placeMeeple, placeTile, rotateLeft)
 import Helpers.TileMapper exposing (getTile)
 import Lamdera exposing (ClientId, SessionId, broadcast, sendToFrontend)
 import Random
 import Random.List
 import Types exposing (..)
-import Types.Game exposing (initializeGame)
+import Types.Game exposing (Game, initializeGame)
 
 
 type alias Model =
@@ -39,46 +40,42 @@ update msg model =
 
         ( InitializeGameAndTileDrawStackShuffled shuffledTileDrawStack, BeGamePlayed { game } ) ->
             let
-                -- Update draw stack
-                ( nextTile, drawStack ) =
-                    case shuffledTileDrawStack of
-                        first :: rest ->
-                            ( first, rest )
-
-                        [] ->
-                            -- Never happen
-                            ( 0, [] )
+                ( maybeNextTileId, drawStack ) =
+                    getPlayableTileFromDrawstack game.tileGrid shuffledTileDrawStack
 
                 updatedGame =
                     { game
-                        | tileToPlace = getTile nextTile
+                        | tileToPlace = getTile (Maybe.withDefault 0 maybeNextTileId)
                         , tileDrawStack = drawStack
                     }
             in
+            -- First move should be always possible
             ( BeGamePlayed { game = updatedGame }
             , broadcast (GameInitialized { game = updatedGame })
             )
 
         ( TileDrawStackShuffled shuffledTileDrawStack, BeGamePlayed { game } ) ->
-            let
-                -- Update draw stack
-                ( nextTile, drawStack ) =
-                    case shuffledTileDrawStack of
-                        first :: rest ->
-                            ( first, rest )
+            case getPlayableTileFromDrawstack game.tileGrid shuffledTileDrawStack of
+                ( Just nextTileId, drawStack ) ->
+                    let
+                        updatedGame =
+                            { game
+                                | tileToPlace = getTile nextTileId
+                                , tileDrawStack = drawStack
+                            }
+                    in
+                    ( BeGamePlayed { game = updatedGame }
+                    , broadcast (UpdateGameState { game = updatedGame })
+                    )
 
-                        [] ->
-                            ( 0, [] )
-
-                updatedGame =
-                    { game
-                        | tileToPlace = getTile nextTile
-                        , tileDrawStack = drawStack
-                    }
-            in
-            ( BeGamePlayed { game = updatedGame }
-            , broadcast (UpdateGameState { game = updatedGame })
-            )
+                ( Nothing, _ ) ->
+                    let
+                        updatedGame =
+                            finishGame game
+                    in
+                    ( BeGamePlayed { game = updatedGame }
+                    , broadcast (UpdateGameState { game = updatedGame })
+                    )
 
         _ ->
             ( model, Cmd.none )

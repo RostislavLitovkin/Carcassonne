@@ -418,3 +418,50 @@ placeMeeple game position =
         , playerScores = playerScores
         , gameState = PlaceTileState
     }
+
+
+finishGame : Game -> Game
+finishGame game =
+    let
+        featureScores =
+            game.meeples
+                |> Dict.keys
+                |> List.map (\sideId -> ( sideId, countFeature game.tileGrid sideId ))
+
+        cloisterScores =
+            game.tileGrid
+                |> Dict.toList
+                |> List.filterMap
+                    (\( coordinates, tile ) ->
+                        Maybe.map (\sideId -> ( sideId, countCloister game.tileGrid coordinates )) tile.cloister
+                    )
+
+        -- Append cloister score if exists
+        --|> List.append (getAdjacentTileCloisterScores game.tileGrid game.lastPlacedTile)
+        playerScores =
+            featureScores
+                |> List.append cloisterScores
+                |> List.map
+                    (\( sideId, score ) ->
+                        getFeatureOwners game.meeples sideId
+                            |> List.map (\playerIndex -> ( playerIndex, score ))
+                    )
+                |> List.concat
+                |> List.foldl
+                    (\( playerIndex, score ) scores ->
+                        let
+                            playerName =
+                                game.players
+                                    |> Array.get playerIndex
+                                    -- Should never happen
+                                    |> Maybe.withDefault ""
+                        in
+                        Dict.update playerName (Maybe.andThen (\x -> Just (x + score))) scores
+                    )
+                    game.playerScores
+    in
+    { game
+        | playerScores = playerScores
+        , meeples = Dict.fromList []
+        , gameState = FinishedState
+    }

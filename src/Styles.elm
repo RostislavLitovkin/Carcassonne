@@ -3,6 +3,7 @@ module Styles exposing (..)
 import Html exposing (Attribute)
 import Html.Attributes exposing (style)
 
+
 container : List (Html.Attribute msg)
 container =
     [ style "max-width" "400px"
@@ -13,6 +14,7 @@ container =
     , style "box-shadow" "0 4px 24px rgba(74,144,226,0.08)"
     , style "font-family" "Roboto, Arial, sans-serif"
     ]
+
 
 inputBox : List (Html.Attribute msg)
 inputBox =
@@ -25,6 +27,7 @@ inputBox =
     , style "background" "#fff"
     ]
 
+
 buttonMain : List (Html.Attribute msg)
 buttonMain =
     [ style "padding" "0.6em 1.2em"
@@ -36,7 +39,9 @@ buttonMain =
     , style "font-weight" "700"
     , style "cursor" "pointer"
     , style "transition" "background 0.2s"
+    , style "margin" "5px"
     ]
+
 
 playerList : List (Html.Attribute msg)
 playerList =
@@ -44,6 +49,7 @@ playerList =
     , style "padding" "0"
     , style "margin" "1em 0 0 0"
     ]
+
 
 playerItem : List (Html.Attribute msg)
 playerItem =
@@ -53,6 +59,7 @@ playerItem =
     , style "border-radius" "5px"
     , style "box-shadow" "0 1px 3px rgba(0,0,0,0.04)"
     ]
+
 
 errorBox : List (Html.Attribute msg)
 errorBox =

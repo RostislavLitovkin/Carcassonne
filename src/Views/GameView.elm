@@ -7,6 +7,7 @@ import Html exposing (..)
 import Html.Attributes exposing (height, src, style, width)
 import Html.Events exposing (onClick)
 import Set exposing (Set)
+import Styles exposing (buttonMain)
 import Types exposing (FrontendMsg(..))
 import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (..)
@@ -150,8 +151,42 @@ renderGameView playerName game debugMode =
                     )
                 ]
 
-        _ ->
-            div [] []
+        FinishedState ->
+            div
+                [ style "display" "flex"
+                , style "flex-direction" "row"
+                , style "align-items" "flex-start"
+                ]
+                [ renderSideBar game playerName
+                , div
+                    [ style "flex" "1"
+                    , style "position" "relative"
+                    , style "display" "flex"
+                    , style "justify-content" "center"
+                    , style "align-items" "center"
+                    ]
+                    (div
+                        [ style "position" "absolute"
+                        , style "top" "50%"
+                        , style "left" "50%"
+                        , style "transform" "translate(-50%, 0%)"
+                        ]
+                        [ viewTileGrid game.tileGrid ]
+                        :: (if debugMode then
+                                [ div
+                                    [ style "position" "absolute"
+                                    , style "top" "50%"
+                                    , style "left" "50%"
+                                    , style "transform" "translate(-50%, 0%)"
+                                    ]
+                                    [ viewDebugOverlay game.tileGrid ]
+                                ]
+
+                            else
+                                []
+                           )
+                    )
+                ]
 
 
 viewTileGrid : TileGrid -> Html FrontendMsg
@@ -576,16 +611,17 @@ renderSideBar game yourPlayerName =
         , style "box-sizing" "border-box"
         , style "height" "100vh"
         , style "min-height" "100vh"
+        , style "font-family" "Roboto, Arial, sans-serif"
         ]
         (div
-            [ style "font-family" "Bebas Neue"
-            , style "font-weight" "bold"
+            [ style "font-weight" "bold"
             , style "font-size" "36px"
             , style "text-align" "center"
             , style "width" "100%"
             ]
             [ text (GameState.toString game.gameState) ]
             :: div [] [ text ("Playing as: " ++ yourPlayerName) ]
+            :: br [] []
             :: br [] []
             :: (List.range 0 (Array.length game.players - 1)
                     |> List.map
@@ -632,7 +668,9 @@ renderSideBar game yourPlayerName =
                                 ]
                         )
                )
-            ++ [ div
+            ++ [ br [] []
+               , br [] []
+               , div
                     [ style "margin" "24px auto"
                     , style "width" "150px"
                     , style "height" "150px"
@@ -642,43 +680,31 @@ renderSideBar game yourPlayerName =
                     , style "background-color" "#222"
                     ]
                     [ img
-                        [ src (getTileImageSource game.tileToPlace.tileId)
-                        , width 150
-                        , height 150
-                        , style "transform" ("rotate(" ++ String.fromInt (negate game.tileToPlace.rotation) ++ "deg)")
-                        , style "transition" "transform 0.2s"
-                        ]
+                        ([ width 150
+                         , height 150
+                         , style "transition" "transform 0.2s"
+                         ]
+                            ++ (if game.gameState == PlaceTileState then
+                                    [ src <| getTileImageSource game.tileToPlace.tileId
+                                    , style "transform" ("rotate(" ++ String.fromInt (negate game.tileToPlace.rotation) ++ "deg)")
+                                    ]
+
+                                else
+                                    [ src "questionmark.png" ]
+                               )
+                        )
                         []
                     ]
+               , br [] []
+               , br [] []
                , button
-                    [ onClick FeRotateTileLeft
-                    , style "margin-top" "16px"
-                    , style "padding" "8px 16px"
-                    , style "background-color" "#666"
-                    , style "color" "white"
-                    , style "border" "none"
-                    , style "cursor" "pointer"
-                    ]
+                    (onClick FeRotateTileLeft :: buttonMain)
                     [ text "Rotate Tile" ]
                , button
-                    [ onClick FeTerminateGame
-                    , style "margin-top" "16px"
-                    , style "padding" "8px 16px"
-                    , style "background-color" "#666"
-                    , style "color" "white"
-                    , style "border" "none"
-                    , style "cursor" "pointer"
-                    ]
+                    (onClick FeTerminateGame :: buttonMain)
                     [ text "Terminate Game" ]
                , button
-                    [ onClick ChangeDebugMode
-                    , style "margin-top" "16px"
-                    , style "padding" "8px 16px"
-                    , style "background-color" "#666"
-                    , style "color" "white"
-                    , style "border" "none"
-                    , style "cursor" "pointer"
-                    ]
-                    [ text "Change debug mode" ]
+                    (onClick ChangeDebugMode :: buttonMain)
+                    [ text "Debug mode" ]
                ]
         )
