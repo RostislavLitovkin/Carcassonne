@@ -37,6 +37,7 @@ type FrontendMsg
     = NameInputChanged String
     | Register
     | Kick PlayerName
+    | FeKillLobby
     | FeInitializeGame
     | FeRotateTileLeft
     | ChangeDebugMode
@@ -50,6 +51,7 @@ type FrontendMsg
 type ToBackend
     = RegisterPlayer PlayerName
     | KickPlayer PlayerName
+    | KillLobby
     | InitializeGame
     | RotateTileLeft
     | PlaceTile Coordinate
@@ -72,6 +74,8 @@ type ToFrontend
         { players : List PlayerName
         , kickedPlayer : PlayerName
         }
+    | LobbyIsFull
+    | LobbyKilled
     | GameInitialized
         { game : Game
         }

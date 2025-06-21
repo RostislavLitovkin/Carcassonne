@@ -7,7 +7,7 @@ import Lamdera exposing (ClientId, SessionId, broadcast, sendToFrontend)
 import Random
 import Random.List
 import Types exposing (..)
-import Types.Game exposing (initializeGame)
+import Types.Game exposing (initializeGame, playerLimit)
 
 
 type alias Model =
@@ -97,9 +97,14 @@ updateFromFrontend _ clientId msg model =
                 , sendToFrontend clientId (PlayerRegistrationUpdated { players = players })
                 )
 
-            else
+            else if List.length newPlayers <= playerLimit then
                 ( BePlayerRegistration { players = newPlayers }
                 , broadcast (PlayerRegistrationUpdated { players = newPlayers })
+                )
+
+            else
+                ( BePlayerRegistration { players = players }
+                , sendToFrontend clientId LobbyIsFull
                 )
 
         ( RegisterPlayer _, BeGamePlayed { game } ) ->
@@ -114,6 +119,11 @@ updateFromFrontend _ clientId msg model =
             in
             ( BePlayerRegistration { players = newPlayers }
             , broadcast (PlayerKicked { kickedPlayer = playerName, players = newPlayers })
+            )
+
+        ( KillLobby, BePlayerRegistration _ ) ->
+            ( BePlayerRegistration { players = [] }
+            , broadcast LobbyKilled
             )
 
         ( InitializeGame, BePlayerRegistration { players } ) ->

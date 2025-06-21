@@ -40,6 +40,11 @@ type alias Game =
     }
 
 
+playerLimit : PlayerIndex
+playerLimit =
+    5
+
+
 {-| Initialize a new game instance with players.
 
 Players list must not be empty

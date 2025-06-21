@@ -7,13 +7,12 @@ import Styles
 import Types exposing (FrontendMsg(..))
 
 
-renderPlayerRegistrationView : String -> Maybe String -> Html FrontendMsg
 renderPlayerRegistrationView nameInput error =
     div Styles.container
         [ div []
             [ Html.form
                 [ onSubmit Register ]
-                [ input
+                ([ input
                     (Styles.inputBox
                         ++ [ placeholder "Enter your name"
                            , value nameInput
@@ -21,10 +20,20 @@ renderPlayerRegistrationView nameInput error =
                            ]
                     )
                     []
-                , button
+                 , button
                     (Styles.buttonMain ++ [ onClick Register ])
                     [ text "Join" ]
-                ]
+                 ]
+                    ++ (if error == Just "Lobby is full." then
+                            [ button
+                                (Styles.buttonMain ++ [ onClick FeKillLobby ])
+                                [ text "Kill lobby" ]
+                            ]
+
+                        else
+                            []
+                       )
+                )
             ]
         , case error of
             Just err ->

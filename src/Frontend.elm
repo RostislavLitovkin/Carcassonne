@@ -1,19 +1,12 @@
 module Frontend exposing (Model, app)
 
-import Array
-import Dict
 import Helpers.FrontendHelpers exposing (..)
 import Helpers.GameLogic exposing (..)
 import Helpers.TileMapper exposing (..)
-import Html exposing (Html, br, button, div, img, li, text, ul)
-import Html.Attributes exposing (height, src, style, width)
-import Html.Events exposing (onClick)
+import Html exposing (Html)
 import Lamdera exposing (sendToBackend)
-import Set exposing (Set)
 import String
-import Styles
 import Types exposing (..)
-import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (..)
 import Types.GameState exposing (..)
 import Types.Meeple exposing (..)
@@ -97,6 +90,9 @@ update msg model =
         ( FeTerminateGame, _ ) ->
             ( model, sendToBackend TerminateGame )
 
+        ( FeKillLobby, _ ) ->
+            ( model, sendToBackend KillLobby )
+
         _ ->
             ( model, Cmd.none )
 
@@ -115,6 +111,24 @@ updateFromBackend msg model =
                 ( FeLobby { playerName = playerName, players = players }
                 , Cmd.none
                 )
+
+        ( LobbyIsFull, FePlayerRegistration { nameInput } ) ->
+            ( FePlayerRegistration { nameInput = nameInput, error = Just "Lobby is full." }
+            , Cmd.none
+            )
+
+        ( LobbyIsFull, FeLobby { playerName } ) ->
+            ( FePlayerRegistration { nameInput = playerName, error = Just "Lobby is full." }
+            , Cmd.none
+            )
+
+        ( LobbyKilled, FePlayerRegistration { nameInput } ) ->
+            ( FePlayerRegistration { nameInput = nameInput, error = Nothing }
+            , Cmd.none
+            )
+
+        ( LobbyKilled, FeLobby _ ) ->
+            init
 
         ( JoinedGame { game }, FeLobby { playerName } ) ->
             ( FeGamePlayed
