@@ -301,8 +301,8 @@ renderPlaceableCell : Coordinate -> Set Coordinate -> Html FrontendMsg
 renderPlaceableCell coord coordinatesToBePlacedOn =
     if Set.member coord coordinatesToBePlacedOn then
         div
-            [ style "width" "64px"
-            , style "height" "64px"
+            [ style "width" "62px"
+            , style "height" "62px"
             , style "background-color" "rgba(144, 238, 144, 0.4)"
             , style "border" "1px dashed #5a5"
             , style "cursor" "pointer"
