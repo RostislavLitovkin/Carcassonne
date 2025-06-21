@@ -7,7 +7,7 @@ import Lamdera exposing (ClientId, SessionId, broadcast, sendToFrontend)
 import Random
 import Random.List
 import Types exposing (..)
-import Types.Game exposing (Game, initializeGame)
+import Types.Game exposing (initializeGame)
 
 
 type alias Model =
