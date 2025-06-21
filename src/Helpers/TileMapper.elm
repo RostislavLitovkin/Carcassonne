@@ -4,6 +4,8 @@ import Types.Feature exposing (..)
 import Types.Tile exposing (..)
 
 
+{-| Gets a tile with the tileId
+-}
 getTile : TileId -> Tile
 getTile tileId =
     case tileId of
@@ -249,7 +251,3 @@ getTile tileId =
 
         _ ->
             getTile 0
-
-
-
--- Should never happen

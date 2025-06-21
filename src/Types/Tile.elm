@@ -29,18 +29,24 @@ type alias Tile =
     }
 
 
+{-| Returns the largest sideId of the tile
+-}
 getTileMaximumSideId : Tile -> SideId
 getTileMaximumSideId tile =
     List.maximum (getAllSides tile)
         |> Maybe.withDefault 0
 
 
+{-| return only meaningful sideIds (without -1), without duplicates
+-}
 getTileSideIds : Tile -> Set SideId
 getTileSideIds tile =
     Set.fromList (getAllSides tile)
         |> Set.remove -1
 
 
+{-| Returns a list of all sideIds, including duplicates and -1 sideIds
+-}
 getAllSides : Tile -> List SideId
 getAllSides tile =
     case tile.cloister of
@@ -51,6 +57,8 @@ getAllSides tile =
             [ tile.north.sideId, tile.east.sideId, tile.south.sideId, tile.west.sideId, cloisterSideId ]
 
 
+{-| raise the tile sideIds to be at least minimumumSideId
+-}
 updateSideIds : SideId -> Tile -> Tile
 updateSideIds minimumSideId tile =
     let

@@ -1,7 +1,9 @@
 module Types exposing (..)
 
 import Lamdera exposing (ClientId, SessionId)
-import Types.Game exposing (Coordinate, Game, MeeplePosition)
+import Types.Coordinate exposing (Coordinate)
+import Types.Game exposing (Game)
+import Types.Meeple exposing (MeeplePosition)
 import Types.PlayerName exposing (..)
 import Types.Tile exposing (SideId)
 

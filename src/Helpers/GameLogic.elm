@@ -1,29 +1,42 @@
 module Helpers.GameLogic exposing (..)
 
 import Array
-import Dict
-import Fuzz exposing (maybe)
+import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import Maybe
-import Maybe.Extra
 import Set exposing (Set)
 import Tuple exposing (first, second)
+import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (..)
 import Types.GameState exposing (GameState(..))
+import Types.Meeple exposing (..)
+import Types.PlayerIndex exposing (PlayerIndex)
+import Types.Score exposing (Score)
 import Types.Tile exposing (..)
 
 
 {-| Rotares the tile by 90 degrees to the left (90 degrees counterclockwise)
 -}
 rotateLeft : Tile -> Tile
-rotateLeft rest =
-    { rest
-        | north = rest.east
-        , west = rest.north
-        , south = rest.west
-        , east = rest.south
-        , rotation = modBy 360 (rest.rotation + 90)
-    }
+rotateLeft tile =
+    -- Prevent problems with overflow
+    if tile.rotation >= 360000 then
+        { tile
+            | north = tile.east
+            , west = tile.north
+            , south = tile.west
+            , east = tile.south
+            , rotation = modBy 360 tile.rotation
+        }
+
+    else
+        { tile
+            | north = tile.east
+            , west = tile.north
+            , south = tile.west
+            , east = tile.south
+            , rotation = tile.rotation + 90
+        }
 
 
 {-| Checks that the tile is rotated correctly along with its features
@@ -34,7 +47,7 @@ isRotatedCorrectly tile =
         foundTile =
             getTile tile.tileId
     in
-    case tile.rotation of
+    case modBy 360 tile.rotation of
         0 ->
             foundTile.north.sideFeature
                 == tile.north.sideFeature
@@ -79,83 +92,7 @@ isRotatedCorrectly tile =
             False
 
 
-{-| Checks if a tile can be placed on a given coordinate
--}
-tileCanBePlaced : TileGrid -> Tile -> Coordinate -> Bool
-tileCanBePlaced tileGrid tile coordinates =
-    let
-        northernTile =
-            Dict.get ( first coordinates, second coordinates + 1 ) tileGrid
-
-        easternTile =
-            Dict.get ( first coordinates + 1, second coordinates ) tileGrid
-
-        southernTile =
-            Dict.get ( first coordinates, second coordinates - 1 ) tileGrid
-
-        westernTile =
-            Dict.get ( first coordinates - 1, second coordinates ) tileGrid
-    in
-    Dict.get coordinates tileGrid
-        == Nothing
-        && (northernTile
-                |> Maybe.map (\t -> t.south.sideFeature == tile.north.sideFeature)
-                |> Maybe.withDefault True
-           )
-        && (easternTile
-                |> Maybe.map (\t -> t.west.sideFeature == tile.east.sideFeature)
-                |> Maybe.withDefault True
-           )
-        && (southernTile
-                |> Maybe.map (\t -> t.north.sideFeature == tile.south.sideFeature)
-                |> Maybe.withDefault True
-           )
-        && (westernTile
-                |> Maybe.map (\t -> t.east.sideFeature == tile.west.sideFeature)
-                |> Maybe.withDefault True
-           )
-
-
-{-| Get a set of all coordinates where it is possible to place the given tile (with it's current rotation)
--}
-getCoordinatesToBePlacedOn : TileGrid -> Tile -> Set Coordinate
-getCoordinatesToBePlacedOn tileGrid tile =
-    let
-        occupiedCoords =
-            Dict.keys tileGrid
-
-        adjacentCoords =
-            occupiedCoords
-                |> List.concatMap
-                    (\( x, y ) ->
-                        [ ( x + 1, y )
-                        , ( x - 1, y )
-                        , ( x, y + 1 )
-                        , ( x, y - 1 )
-                        ]
-                    )
-                |> List.filter (\coord -> Dict.get coord tileGrid == Nothing)
-                |> Set.fromList
-    in
-    Set.filter (tileCanBePlaced tileGrid tile) adjacentCoords
-
-
-getMeeplePositionsToBePlacedOn : Meeples -> Tile -> List MeeplePosition
-getMeeplePositionsToBePlacedOn meeples tile =
-    getAllSides tile
-        |> List.map2 (\position sideId -> ( sideId, position )) [ North, East, South, West, Center ]
-        |> List.filter (\( sideId, _ ) -> Dict.get sideId meeples == Nothing)
-        |> List.filterMap
-            (\( sideId, position ) ->
-                if sideId /= -1 then
-                    Just position
-
-                else
-                    Nothing
-            )
-
-
-{-| Replaces all SideIds for a different SideId on all tiles.
+{-| Replaces all SideIds for a different SideId on all tiles
 
 Returns the updated TileGrid
 
@@ -190,6 +127,8 @@ replaceTileSideId maybeIdToReplace id tileGrid =
             tileGrid
 
 
+{-| Just updates the meeple sideIds to follow the sideId changes on the tileGrid
+-}
 replaceMeepleSideId : Maybe SideId -> SideId -> Meeples -> Meeples
 replaceMeepleSideId maybeIdToReplace id meeples =
     let
@@ -215,9 +154,9 @@ replaceMeepleSideId maybeIdToReplace id meeples =
             |> Dict.remove idToReplace
 
 
-{-| Count score for a featured.
+{-| Count score for a featured
 
-Prerequisite: You probably want to count only score for a finished feature.
+Prerequisite: You probably want to count only score for a finished feature
 
 -}
 countFeature : TileGrid -> SideId -> Score
@@ -304,6 +243,8 @@ getAdjacentTileCloisterScores grid ( x, y ) =
         |> List.map (\( _, sideId ) -> ( sideId, 9 ))
 
 
+{-| Returns the list of majority owners for a feature.
+-}
 getFeatureOwners : Meeples -> SideId -> List PlayerIndex
 getFeatureOwners meeples sideId =
     let
@@ -340,6 +281,18 @@ getFeatureOwners meeples sideId =
     playersWithMaxCount
 
 
+{-| Places a tile on a given coordinate
+
+Does not check whether the move is valid
+
+Handles all of the surrounding logic related to placing a tile:
+
+  - updates sideIds
+  - updates meeple sideIds
+  - changes game state
+  - calculates nextSideId
+
+-}
 placeTile : Game -> Coordinate -> Game
 placeTile game ( x, y ) =
     let
@@ -385,6 +338,16 @@ placeTile game ( x, y ) =
     }
 
 
+{-| Places a tile on a given position
+
+Does not check whether the move is valid
+
+Handles all of the surrounding logic related to placing a meeple:
+
+  - changes game state
+  - counts and updates score for finished features
+
+-}
 placeMeeple : Game -> MeeplePosition -> Game
 placeMeeple game position =
     let
@@ -416,17 +379,6 @@ placeMeeple game position =
 
                 Skip ->
                     game.meeples
-
-        addCloisterScore scores tileCoordinates =
-            if countCloister game.tileGrid tileCoordinates == 9 then
-                let
-                    cloisterSideId =
-                        Dict.get tileCoordinates game.tileGrid |> Maybe.map (\tile -> tile.cloister |> Maybe.withDefault -1) |> Maybe.withDefault -1
-                in
-                ( cloisterSideId, 9 ) :: scores
-
-            else
-                scores
 
         finishedFeatureScores =
             getTileSideIds lastPlacedTile

@@ -2,6 +2,7 @@ module Frontend exposing (Model, app)
 
 import Array
 import Dict
+import Helpers.FrontendHelpers exposing (..)
 import Helpers.GameLogic exposing (..)
 import Helpers.TileMapper exposing (..)
 import Html exposing (Html, br, button, div, img, input, li, text, ul)
@@ -12,8 +13,10 @@ import Set exposing (Set)
 import String
 import Styles
 import Types exposing (..)
+import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (..)
 import Types.GameState exposing (..)
+import Types.Meeple exposing (..)
 import Types.PlayerName exposing (..)
 import Types.Tile exposing (..)
 
@@ -545,8 +548,8 @@ renderOverlayCell coordinates lastTilePlacedCoordinates positionsToBePlacedOn =
 viewMeepleGrid : TileGrid -> Meeples -> Html FrontendMsg
 viewMeepleGrid tileGrid meeples =
     let
-        meeplePositions =
-            toMeeplePositions meeples
+        meepleCoordinates =
+            toMeepleCoordinates meeples
 
         coordinates =
             Dict.keys tileGrid
@@ -570,7 +573,7 @@ viewMeepleGrid tileGrid meeples =
                     (\y ->
                         div [ style "display" "flex" ]
                             (List.range (minX - 1) (maxX + 1)
-                                |> List.map (\x -> renderMeepleCell <| Dict.get ( x, y ) meeplePositions)
+                                |> List.map (\x -> renderMeepleCell <| Dict.get ( x, y ) meepleCoordinates)
                             )
                     )
     in

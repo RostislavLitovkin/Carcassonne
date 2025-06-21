@@ -4,73 +4,21 @@ import Array exposing (Array)
 import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import List
+import Types.Coordinate exposing (Coordinate)
 import Types.GameState exposing (..)
+import Types.Meeple exposing (..)
+import Types.PlayerIndex exposing (..)
 import Types.PlayerName exposing (..)
+import Types.Score exposing (Score)
 import Types.Tile exposing (..)
-
-
-type alias Score =
-    Int
-
-
-type alias PlayerIndex =
-    Int
 
 
 type alias PlayerScores =
     Dict PlayerName Score
 
 
-type alias Coordinate =
-    ( Int, Int )
-
-
 type alias TileGrid =
     Dict Coordinate Tile
-
-
-type MeeplePosition
-    = Center
-    | North
-    | East
-    | South
-    | West
-    | Skip
-
-
-compareMeeplePosition : MeeplePosition -> MeeplePosition -> Order
-compareMeeplePosition a b =
-    let
-        meeplePositionToInt position =
-            case position of
-                Center ->
-                    0
-
-                North ->
-                    1
-
-                East ->
-                    2
-
-                South ->
-                    3
-
-                West ->
-                    4
-
-                Skip ->
-                    5
-    in
-    compare (meeplePositionToInt a) (meeplePositionToInt b)
-
-
-type alias Meeple =
-    { owner : PlayerIndex
-    , coordinates : Coordinate
-    , position : MeeplePosition
-
-    -- More meeple properties might be useful when adding Carcassonne expansions (Type: Large meeple / pig...)
-    }
 
 
 type alias Meeples =
@@ -119,6 +67,8 @@ initializeGame players =
     }
 
 
+{-| Returns next player index
+-}
 getNextPlayer : Game -> PlayerIndex
 getNextPlayer game =
     if game.currentPlayer + 1 == Array.length game.players then
@@ -128,6 +78,8 @@ getNextPlayer game =
         game.currentPlayer + 1
 
 
+{-| Returns the last placed tile
+-}
 getLastPlacedTile : Game -> Tile
 getLastPlacedTile game =
     game.tileGrid
@@ -136,6 +88,11 @@ getLastPlacedTile game =
         |> Maybe.withDefault (getTile 0)
 
 
+{-| Initializes the tile grid
+
+  - Expansions can change this
+
+-}
 initializeTileGrid : TileGrid
 initializeTileGrid =
     Dict.fromList [ ( ( 0, 0 ), getTile 0 ) ]
@@ -150,19 +107,17 @@ getNextSideId tileGrid =
         |> List.map getTileMaximumSideId
         |> List.maximum
         |> Maybe.withDefault 0
-        |> (+) 1
 
 
-{-| Initialize a random tile draw stack
+{-| Initialize tile draw stack
 -}
 initializeDrawStack : List TileId
 initializeDrawStack =
-    -- TODO: make random
     List.concat
         [ List.repeat 3 0
         , List.repeat 9 1
         , List.repeat 8 2
-        , List.repeat 4000 3
+        , List.repeat 4 3
         , List.repeat 2 4
         , List.repeat 1 5
         , List.repeat 3 6
@@ -184,32 +139,3 @@ initializeDrawStack =
         , List.repeat 4 22
         , List.repeat 1 23
         ]
-
-
-meepleColorDictionary : Dict Int String
-meepleColorDictionary =
-    Dict.fromList
-        [ ( 0, "red" )
-        , ( 1, "blue" )
-        , ( 2, "green" )
-        , ( 3, "yellow" )
-        , ( 4, "black" )
-        ]
-
-
-getMeepleImageSource : Int -> String
-getMeepleImageSource playerIndex =
-    meepleColorDictionary
-        |> Dict.get playerIndex
-        |> Maybe.map (\color -> "/" ++ color ++ ".png")
-        |> Maybe.withDefault "/black.png"
-
-
-toMeeplePositions : Meeples -> Dict ( Int, Int ) Meeple
-toMeeplePositions meeples =
-    meeples
-        |> Dict.toList
-        |> List.map (\( _, meeplesList ) -> meeplesList)
-        |> List.concat
-        |> List.map (\meeple -> ( meeple.coordinates, meeple ))
-        |> Dict.fromList
