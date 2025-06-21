@@ -1,6 +1,7 @@
 module GameLogicTests exposing (..)
 
 import Expect
+import Helpers.FrontendHelpers exposing (..)
 import Helpers.GameLogic exposing (..)
 import Helpers.TileMapper exposing (..)
 import Set

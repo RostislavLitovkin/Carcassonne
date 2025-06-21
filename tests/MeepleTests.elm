@@ -5,6 +5,8 @@ import Expect
 import Helpers.GameLogic exposing (getFeatureOwners)
 import Test exposing (..)
 import Types.Game exposing (..)
+import Types.Meeple exposing (..)
+import Types.Tile exposing (..)
 
 
 getFeatureOwnersTest : Test
