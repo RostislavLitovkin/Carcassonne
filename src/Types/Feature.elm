@@ -5,3 +5,4 @@ type Feature
     = City
     | Road
     | Field
+    | NoFeature

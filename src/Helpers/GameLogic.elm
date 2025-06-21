@@ -1,13 +1,12 @@
 module Helpers.GameLogic exposing (..)
 
 import Array
-import Debug
-import Dict exposing (Dict)
+import Dict
 import Helpers.TileMapper exposing (getTile)
 import Maybe
-import Set exposing (Set)
-import Tuple exposing (first, second)
+import Set
 import Types.Coordinate exposing (Coordinate)
+import Types.Feature exposing (Feature(..))
 import Types.Game exposing (..)
 import Types.GameState exposing (GameState(..))
 import Types.Meeple exposing (..)
@@ -282,6 +281,25 @@ getFeatureOwners meeples sideId =
     playersWithMaxCount
 
 
+{-| Find the feature with the SideId
+
+This method can definitely be optimised
+
+This function does not work for cloisters
+
+-}
+getSideIdFeature : SideId -> TileGrid -> Feature
+getSideIdFeature sideId tileGrid =
+    tileGrid
+        |> Dict.values
+        |> List.map (\tile -> [ tile.north, tile.east, tile.south, tile.west ])
+        |> List.concat
+        |> List.filter (\side -> side.sideId == sideId)
+        |> List.head
+        |> Maybe.map (\side -> side.sideFeature)
+        |> Maybe.withDefault NoFeature
+
+
 {-| Places a tile on a given coordinate
 
 Does not check whether the move is valid
@@ -385,7 +403,19 @@ placeMeeple game position =
             getTileSideIds lastPlacedTile
                 |> Set.toList
                 |> List.filter (isFeatureFinished game.tileGrid)
-                |> List.map (\sideId -> ( sideId, countFeature game.tileGrid sideId ))
+                |> List.map
+                    (\sideId ->
+                        let
+                            score =
+                                countFeature game.tileGrid sideId
+                        in
+                        -- Cities that are larger than 2 tiles give 2x points if they are completed before the game ends
+                        if score > 2 && getSideIdFeature sideId game.tileGrid == City then
+                            ( sideId, 2 * score )
+
+                        else
+                            ( sideId, score )
+                    )
                 -- Append cloister score if exists
                 |> List.append (getAdjacentTileCloisterScores game.tileGrid game.lastPlacedTile)
 
@@ -436,7 +466,6 @@ placeMeeple game position =
                 )
                 game.playerMeeples
                 finishedFeatureScores
-                |> Debug.log "Somthing: "
                 |> Dict.update currentPlayerName
                     (Maybe.map <|
                         if position /= Skip then
