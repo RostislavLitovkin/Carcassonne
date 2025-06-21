@@ -1,6 +1,7 @@
 module Helpers.GameLogic exposing (..)
 
 import Array
+import Debug
 import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import Maybe
@@ -411,10 +412,44 @@ placeMeeple game position =
                         Dict.update playerName (Maybe.andThen (\x -> Just (x + score))) scores
                     )
                     game.playerScores
+
+        currentPlayerName =
+            Array.get game.currentPlayer game.players |> Maybe.withDefault ""
+
+        returnMeeple meeple tempPlayerMeeples =
+            let
+                playerName =
+                    game.players
+                        |> Array.get meeple.owner
+                        -- Should never happen
+                        |> Maybe.withDefault ""
+            in
+            Dict.update playerName (Maybe.map <| (+) 1) tempPlayerMeeples
+
+        playerMeeples =
+            List.foldl
+                (\( sideId, _ ) tempPlayerMeeples ->
+                    addedMeeples
+                        |> Dict.get sideId
+                        |> Maybe.withDefault []
+                        |> List.foldl returnMeeple tempPlayerMeeples
+                )
+                game.playerMeeples
+                finishedFeatureScores
+                |> Debug.log "Somthing: "
+                |> Dict.update currentPlayerName
+                    (Maybe.map <|
+                        if position /= Skip then
+                            (+) -1
+
+                        else
+                            (+) 0
+                    )
     in
     { game
         | currentPlayer = getNextPlayer game
         , meeples = meeples
+        , playerMeeples = playerMeeples
         , playerScores = playerScores
         , gameState = PlaceTileState
     }

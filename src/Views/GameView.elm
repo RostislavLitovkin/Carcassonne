@@ -92,7 +92,7 @@ renderGameView playerName game debugMode =
                     getLastPlacedTile game
 
                 positionsToBePlacedOn =
-                    getMeeplePositionsToBePlacedOn game.meeples lastPlacedTile
+                    getMeeplePositionsToBePlacedOn playerName game.playerMeeples game.meeples lastPlacedTile
             in
             div
                 [ style "display" "flex"

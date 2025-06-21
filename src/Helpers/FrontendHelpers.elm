@@ -7,6 +7,7 @@ import Set exposing (Set)
 import Types.Coordinate exposing (Coordinate)
 import Types.Game exposing (Meeples, TileGrid)
 import Types.Meeple exposing (..)
+import Types.PlayerName exposing (PlayerName)
 import Types.Tile exposing (Tile, TileId, getAllSides)
 
 
@@ -23,19 +24,23 @@ toMeepleCoordinates meeples =
 
 {-| Get a set of all coordinates where it is possible to place a meeple
 -}
-getMeeplePositionsToBePlacedOn : Meeples -> Tile -> List MeeplePosition
-getMeeplePositionsToBePlacedOn meeples tile =
-    getAllSides tile
-        |> List.map2 (\position sideId -> ( sideId, position )) [ North, East, South, West, Center ]
-        |> List.filter (\( sideId, _ ) -> Dict.get sideId meeples == Nothing)
-        |> List.filterMap
-            (\( sideId, position ) ->
-                if sideId /= -1 then
-                    Just position
+getMeeplePositionsToBePlacedOn : PlayerName -> Dict PlayerName Int -> Meeples -> Tile -> List MeeplePosition
+getMeeplePositionsToBePlacedOn playerName playerMeeples meeples tile =
+    if (Dict.get playerName playerMeeples |> Maybe.withDefault 0) > 0 then
+        getAllSides tile
+            |> List.map2 (\position sideId -> ( sideId, position )) [ North, East, South, West, Center ]
+            |> List.filter (\( sideId, _ ) -> Dict.get sideId meeples == Nothing)
+            |> List.filterMap
+                (\( sideId, position ) ->
+                    if sideId /= -1 then
+                        Just position
 
-                else
-                    Nothing
-            )
+                    else
+                        Nothing
+                )
+
+    else
+        [ Skip ]
 
 
 {-| Checks if a tile can be placed on a given coordinate
