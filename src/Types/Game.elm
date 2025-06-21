@@ -162,7 +162,7 @@ initializeDrawStack =
         [ List.repeat 3 0
         , List.repeat 9 1
         , List.repeat 8 2
-        , List.repeat 4 3
+        , List.repeat 4000 3
         , List.repeat 2 4
         , List.repeat 1 5
         , List.repeat 3 6

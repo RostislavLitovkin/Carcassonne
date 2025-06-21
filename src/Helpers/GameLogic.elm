@@ -2,8 +2,10 @@ module Helpers.GameLogic exposing (..)
 
 import Array
 import Dict
+import Fuzz exposing (maybe)
 import Helpers.TileMapper exposing (getTile)
 import Maybe
+import Maybe.Extra
 import Set exposing (Set)
 import Tuple exposing (first, second)
 import Types.Game exposing (..)
@@ -250,6 +252,7 @@ isFeatureFinished grid sideId =
                     && (tile.east.sideId /= sideId || Dict.get ( x + 1, y ) grid /= Nothing)
                     && (tile.south.sideId /= sideId || Dict.get ( x, y - 1 ) grid /= Nothing)
                     && (tile.west.sideId /= sideId || Dict.get ( x - 1, y ) grid /= Nothing)
+                    && (tile.cloister |> Maybe.map ((/=) sideId) |> Maybe.withDefault True)
             )
 
 
@@ -272,6 +275,33 @@ countCloister grid ( x, y ) =
         |> List.filter (\tile -> tile /= Nothing)
         |> List.length
         |> (+) 1
+
+
+{-| Helper function that takes the coordinates of the last placed tile
+and checks all of the adjacent tiles (including itself) if it's cloister is completed.
+-}
+getAdjacentTileCloisterScores : TileGrid -> Coordinate -> List ( SideId, Score )
+getAdjacentTileCloisterScores grid ( x, y ) =
+    [ ( ( x + 1, y + 1 ), Dict.get ( x + 1, y + 1 ) grid )
+    , ( ( x, y + 1 ), Dict.get ( x, y + 1 ) grid )
+    , ( ( x - 1, y + 1 ), Dict.get ( x - 1, y + 1 ) grid )
+    , ( ( x + 1, y ), Dict.get ( x + 1, y ) grid )
+    , ( ( x, y ), Dict.get ( x, y ) grid )
+    , ( ( x - 1, y ), Dict.get ( x - 1, y ) grid )
+    , ( ( x + 1, y - 1 ), Dict.get ( x + 1, y - 1 ) grid )
+    , ( ( x, y - 1 ), Dict.get ( x, y - 1 ) grid )
+    , ( ( x - 1, y - 1 ), Dict.get ( x - 1, y - 1 ) grid )
+    ]
+        |> List.filterMap
+            (\( coordinates, maybeTile ) ->
+                Maybe.map (\tile -> ( coordinates, tile )) maybeTile
+            )
+        |> List.filterMap
+            (\( coordinates, tile ) ->
+                Maybe.map (\cloisterSideId -> ( coordinates, cloisterSideId )) tile.cloister
+            )
+        |> List.filter (\( coordinates, _ ) -> countCloister grid coordinates == 9)
+        |> List.map (\( _, sideId ) -> ( sideId, 9 ))
 
 
 getFeatureOwners : Meeples -> SideId -> List PlayerIndex
@@ -387,24 +417,24 @@ placeMeeple game position =
                 Skip ->
                     game.meeples
 
+        addCloisterScore scores tileCoordinates =
+            if countCloister game.tileGrid tileCoordinates == 9 then
+                let
+                    cloisterSideId =
+                        Dict.get tileCoordinates game.tileGrid |> Maybe.map (\tile -> tile.cloister |> Maybe.withDefault -1) |> Maybe.withDefault -1
+                in
+                ( cloisterSideId, 9 ) :: scores
+
+            else
+                scores
+
         finishedFeatureScores =
             getTileSideIds lastPlacedTile
                 |> Set.toList
                 |> List.filter (isFeatureFinished game.tileGrid)
                 |> List.map (\sideId -> ( sideId, countFeature game.tileGrid sideId ))
                 -- Append cloister score if exists
-                |> (\scores ->
-                        case lastPlacedTile.cloister of
-                            Just sideId ->
-                                if countCloister game.tileGrid game.lastPlacedTile == 9 then
-                                    ( sideId, 9 ) :: scores
-
-                                else
-                                    scores
-
-                            Nothing ->
-                                scores
-                   )
+                |> List.append (getAdjacentTileCloisterScores game.tileGrid game.lastPlacedTile)
 
         meeples =
             List.foldl (\( sideId, _ ) m -> Dict.remove sideId m) addedMeeples finishedFeatureScores
