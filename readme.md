@@ -4,11 +4,17 @@ A multiplayer web version of popular board game Carcassonne built using Lamdera.
 
 Focus is on functionality and playability.
 
+## Try it out!
+
+- https://carcassonne.lamdera.app/
+
+![image](https://github.com/user-attachments/assets/3a7cd8c3-7134-4abf-bb94-b5e4b21b9de1)
+
 ## Project structure
 
 - Lamdera takes care of both frontend and backend code.
 
-**TODO**
+![lamdera-architecture](https://github.com/user-attachments/assets/51f262ec-e4f8-4b68-8257-c5b55fcc4844)
 
 ## Carcassonne overview
 
@@ -90,17 +96,39 @@ City/Road/Field
 
 ### Tile
 
-Has ID for Texture to use for rendering + Rotation 0/90/180/270
+Has TileId used for finding the Texture to use for rendering + Rotation 0/90/180/270...
 
-Has 4 sides, each identified by unique ID used for tracking which features are connected together + Feature enum
+Has 4 sides, each identified by unique SideId used for tracking which features are connected together + Feature enum
 
-And in the middle there can be a Cloister -> true/false
+And in the middle there can be a Cloister -> Just SideId / Nothing
+
+### Meeple
+
+A figure placed on a coordinate, identified by SideId they are occupying. More than 1 meeple may occupy the SideId.
+
+It also contains a position that determines where on the tile the meeple is placed - mostly important for rendering.
+
+Lastly, it holds the owner's PlayerIndex. 
 
 ### Game State
 
 - PlaceTile - Player on turn must place a tile
 - PlaceMeeple - Player may place a meeple on the tile played
 - Finished - There are no more tiles to be placed. Score is counted and winner is determined
+
+### Player registration & Lobby
+
+A lobby system has been also implemented. It allows the user to enter their name and join a lobby, kick players from lobby...
+
+If somebody got disconnected, they can re-enter their name and they can continue playing.
+
+### Debug mode
+
+A special debug mode has been implemented to display the individual SideIds of each tile.
+
+Keep in mind that you can not place tiles/meeples when debug mode is turned on.
+
+![image](https://github.com/user-attachments/assets/6add31b5-2933-4689-96a3-b5ffad548aa1)
 
 ## Build and run
 
@@ -134,6 +162,8 @@ npx elm-test --compiler lamdera
 
 - Elm
 - Lamdera
+- Elm-community packages
+- elm-exploration/test
 
 # Original game 
 
