@@ -1,6 +1,6 @@
 module Styles exposing (..)
 
-import Html exposing (Attribute)
+import Html
 import Html.Attributes exposing (style)
 
 

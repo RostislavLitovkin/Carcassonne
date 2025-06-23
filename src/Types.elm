@@ -44,7 +44,6 @@ type FrontendMsg
     | FePlaceTile Coordinate
     | FePlaceMeeple MeeplePosition
     | FeTerminateGame
-    | ClearError
     | FNoop
 
 
@@ -63,7 +62,6 @@ type BackendMsg
     = ClientConnected SessionId ClientId
     | InitializeGameAndTileDrawStackShuffled (List SideId)
     | TileDrawStackShuffled (List SideId)
-    | NoOpBackendMsg
 
 
 type ToFrontend

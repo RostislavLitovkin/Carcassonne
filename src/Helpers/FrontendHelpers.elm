@@ -48,15 +48,19 @@ getMeeplePositionsToBePlacedOn playerName playerMeeples meeples tile =
 tileCanBePlaced : TileGrid -> Tile -> Coordinate -> Bool
 tileCanBePlaced tileGrid tile ( x, y ) =
     let
+        northernTile : Maybe Tile
         northernTile =
             Dict.get ( x, y + 1 ) tileGrid
 
+        easternTile : Maybe Tile
         easternTile =
             Dict.get ( x + 1, y ) tileGrid
 
+        southernTile : Maybe Tile
         southernTile =
             Dict.get ( x, y - 1 ) tileGrid
 
+        westernTile : Maybe Tile
         westernTile =
             Dict.get ( x - 1, y ) tileGrid
     in
@@ -85,9 +89,11 @@ tileCanBePlaced tileGrid tile ( x, y ) =
 getCoordinatesToBePlacedOn : TileGrid -> Tile -> Set Coordinate
 getCoordinatesToBePlacedOn tileGrid tile =
     let
+        occupiedCoords : List Coordinate
         occupiedCoords =
             Dict.keys tileGrid
 
+        adjacentCoords : Set Coordinate
         adjacentCoords =
             occupiedCoords
                 |> List.concatMap

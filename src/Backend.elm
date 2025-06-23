@@ -7,13 +7,15 @@ import Lamdera exposing (ClientId, SessionId, broadcast, sendToFrontend)
 import Random
 import Random.List
 import Types exposing (..)
-import Types.Game exposing (initializeGame, playerLimit)
+import Types.Game exposing (..)
+import Types.PlayerName exposing (PlayerName)
 
 
 type alias Model =
     BackendModel
 
 
+app : { init : ( Model, Cmd BackendMsg ), update : BackendMsg -> Model -> ( Model, Cmd BackendMsg ), updateFromFrontend : SessionId -> ClientId -> ToBackend -> Model -> ( Model, Cmd BackendMsg ), subscriptions : Model -> Sub BackendMsg }
 app =
     Lamdera.backend
         { init = init
@@ -35,14 +37,16 @@ init =
 update : BackendMsg -> Model -> ( Model, Cmd BackendMsg )
 update msg model =
     case ( msg, model ) of
-        ( ClientConnected _ clientId, BePlayerRegistration rest ) ->
-            ( model, sendToFrontend clientId <| PlayerRegistrationUpdated { players = rest.players } )
+        ( ClientConnected sessionId clientId, BePlayerRegistration rest ) ->
+            Debug.log sessionId
+                ( model, sendToFrontend clientId <| PlayerRegistrationUpdated { players = rest.players } )
 
         ( InitializeGameAndTileDrawStackShuffled shuffledTileDrawStack, BeGamePlayed { game } ) ->
             let
                 ( maybeNextTileId, drawStack ) =
                     getPlayableTileFromDrawstack game.tileGrid shuffledTileDrawStack
 
+                updatedGame : Game
                 updatedGame =
                     { game
                         | tileToPlace = getTile (Maybe.withDefault 0 maybeNextTileId)
@@ -58,6 +62,7 @@ update msg model =
             case getPlayableTileFromDrawstack game.tileGrid shuffledTileDrawStack of
                 ( Just nextTileId, drawStack ) ->
                     let
+                        updatedGame : Game
                         updatedGame =
                             { game
                                 | tileToPlace = getTile nextTileId
@@ -70,6 +75,7 @@ update msg model =
 
                 ( Nothing, _ ) ->
                     let
+                        updatedGame : Game
                         updatedGame =
                             finishGame game
                     in
@@ -86,26 +92,30 @@ updateFromFrontend _ clientId msg model =
     case ( msg, model ) of
         ( RegisterPlayer playerName, BePlayerRegistration { players } ) ->
             let
+                nameExists : Bool
                 nameExists =
                     List.member playerName players
-
-                newPlayers =
-                    playerName :: players
             in
             if nameExists then
                 ( model
                 , sendToFrontend clientId (PlayerRegistrationUpdated { players = players })
                 )
 
-            else if List.length newPlayers <= playerLimit then
-                ( BePlayerRegistration { players = newPlayers }
-                , broadcast (PlayerRegistrationUpdated { players = newPlayers })
-                )
-
             else
-                ( BePlayerRegistration { players = players }
-                , sendToFrontend clientId LobbyIsFull
-                )
+                let
+                    newPlayers : List PlayerName
+                    newPlayers =
+                        playerName :: players
+                in
+                if List.length newPlayers <= playerLimit then
+                    ( BePlayerRegistration { players = newPlayers }
+                    , broadcast (PlayerRegistrationUpdated { players = newPlayers })
+                    )
+
+                else
+                    ( BePlayerRegistration { players = players }
+                    , sendToFrontend clientId LobbyIsFull
+                    )
 
         ( RegisterPlayer _, BeGamePlayed { game } ) ->
             ( model
@@ -114,6 +124,7 @@ updateFromFrontend _ clientId msg model =
 
         ( KickPlayer playerName, BePlayerRegistration { players } ) ->
             let
+                newPlayers : List PlayerName
                 newPlayers =
                     List.filter (\name -> name /= playerName) players
             in
@@ -128,6 +139,7 @@ updateFromFrontend _ clientId msg model =
 
         ( InitializeGame, BePlayerRegistration { players } ) ->
             let
+                game : Game
                 game =
                     initializeGame players
             in
@@ -137,6 +149,7 @@ updateFromFrontend _ clientId msg model =
 
         ( RotateTileLeft, BeGamePlayed { game } ) ->
             let
+                updatedGame : Game
                 updatedGame =
                     { game | tileToPlace = rotateLeft game.tileToPlace }
             in
@@ -146,6 +159,7 @@ updateFromFrontend _ clientId msg model =
 
         ( PlaceTile coordinates, BeGamePlayed { game } ) ->
             let
+                updatedGame : Game
                 updatedGame =
                     placeTile game coordinates
             in
@@ -155,6 +169,7 @@ updateFromFrontend _ clientId msg model =
 
         ( PlaceMeeple position, BeGamePlayed { game } ) ->
             let
+                updatedGame : Game
                 updatedGame =
                     placeMeeple game position
             in
@@ -171,7 +186,6 @@ updateFromFrontend _ clientId msg model =
             ( model, Cmd.none )
 
 
+subscriptions : a -> Sub BackendMsg
 subscriptions _ =
-    Sub.batch
-        [ Lamdera.onConnect ClientConnected
-        ]
+    Lamdera.onConnect ClientConnected

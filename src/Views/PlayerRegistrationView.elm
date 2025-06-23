@@ -5,8 +5,10 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Styles
 import Types exposing (FrontendMsg(..))
+import Types.PlayerName exposing (PlayerName)
 
 
+renderPlayerRegistrationView : PlayerName -> Maybe String -> Html FrontendMsg
 renderPlayerRegistrationView nameInput error =
     div Styles.container
         [ div []

@@ -1,0 +1,43 @@
+name: Elm CI
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Set up Elm
+        uses: jorelali/setup-elm@v4
+        with:
+          elm-version: 0.19.1
+
+      - name: Install elm-test
+        run: npm install -g elm-test
+
+      - name: Install elm-review
+        run: npm install -g elm-review
+
+      - name: Run elm-review (code style/lint)
+        run: elm-review
+
+      - name: Compile Frontend
+        run: elm make src/Frontend.elm --output=/dev/null
+      
+      - name: Compile Backend
+        run: elm make src/Backend.elm --output=/dev/null
+
+      - name: Run unit tests
+        run: npx elm-test --compiler lamdera

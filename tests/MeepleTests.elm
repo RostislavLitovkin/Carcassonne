@@ -4,8 +4,8 @@ import Dict
 import Expect
 import Helpers.GameLogic exposing (getFeatureOwners)
 import Test exposing (..)
-import Types.Game exposing (..)
 import Types.Meeple exposing (..)
+import Types.PlayerIndex exposing (PlayerIndex)
 import Types.Tile exposing (..)
 
 
@@ -15,13 +15,15 @@ getFeatureOwnersTest =
         [ test "No meeples" <|
             \_ ->
                 let
+                    meeples : Dict.Dict SideId (List { owner : PlayerIndex, coordinates : ( Int, Int ), position : MeeplePosition })
                     meeples =
-                        Dict.fromList []
+                        Dict.empty
                 in
                 Expect.equal (getFeatureOwners meeples 0) []
         , test "1 meeple" <|
             \_ ->
                 let
+                    meeples : Dict.Dict SideId (List { owner : PlayerIndex, coordinates : ( Int, Int ), position : MeeplePosition })
                     meeples =
                         Dict.fromList
                             [ ( 1, [ { owner = 0, coordinates = ( -1, 0 ), position = South } ] )
@@ -33,6 +35,7 @@ getFeatureOwnersTest =
         , test "2 meeples" <|
             \_ ->
                 let
+                    meeples : Dict.Dict SideId (List { owner : PlayerIndex, coordinates : ( Int, Int ), position : MeeplePosition })
                     meeples =
                         Dict.fromList
                             [ ( 0, [ { owner = 1, coordinates = ( 0, 0 ), position = North }, { owner = 1, coordinates = ( 1, 0 ), position = East } ] )
@@ -44,6 +47,7 @@ getFeatureOwnersTest =
         , test "1 meeple split" <|
             \_ ->
                 let
+                    meeples : Dict.Dict SideId (List { owner : PlayerIndex, coordinates : ( Int, Int ), position : MeeplePosition })
                     meeples =
                         Dict.fromList
                             [ ( 0, [ { owner = 1, coordinates = ( 0, 0 ), position = North }, { owner = 0, coordinates = ( 1, 0 ), position = East } ] )
@@ -55,6 +59,7 @@ getFeatureOwnersTest =
         , test "2 meeples > 1 meeple" <|
             \_ ->
                 let
+                    meeples : Dict.Dict SideId (List { owner : PlayerIndex, coordinates : ( Int, Int ), position : MeeplePosition })
                     meeples =
                         Dict.fromList
                             [ ( 0, [ { owner = 0, coordinates = ( 1, 0 ), position = East } ] )

@@ -1,7 +1,7 @@
 module Helpers.GameLogic exposing (..)
 
 import Array
-import Dict
+import Dict exposing (Dict)
 import Helpers.TileMapper exposing (getTile)
 import Maybe
 import Set
@@ -11,6 +11,7 @@ import Types.Game exposing (..)
 import Types.GameState exposing (GameState(..))
 import Types.Meeple exposing (..)
 import Types.PlayerIndex exposing (PlayerIndex)
+import Types.PlayerName exposing (PlayerName)
 import Types.Score exposing (Score)
 import Types.Tile exposing (..)
 
@@ -44,6 +45,7 @@ rotateLeft tile =
 isRotatedCorrectly : Tile -> Bool
 isRotatedCorrectly tile =
     let
+        foundTile : Tile
         foundTile =
             getTile tile.tileId
     in
@@ -100,9 +102,11 @@ Returns the updated TileGrid
 replaceTileSideId : Maybe SideId -> SideId -> TileGrid -> TileGrid
 replaceTileSideId maybeIdToReplace id tileGrid =
     let
+        idToReplace : SideId
         idToReplace =
             Maybe.withDefault -1 maybeIdToReplace
 
+        updateSide : Side -> Side
         updateSide side =
             if side.sideId == idToReplace then
                 { side | sideId = id }
@@ -132,20 +136,24 @@ replaceTileSideId maybeIdToReplace id tileGrid =
 replaceMeepleSideId : Maybe SideId -> SideId -> Meeples -> Meeples
 replaceMeepleSideId maybeIdToReplace id meeples =
     let
+        idToReplace : SideId
         idToReplace =
             Maybe.withDefault -1 maybeIdToReplace
 
+        meeplesPlacedOnIdToReplace : List Meeple
         meeplesPlacedOnIdToReplace =
             meeples |> Dict.get idToReplace |> Maybe.withDefault []
 
+        meeplesPlacedOnId : List Meeple
         meeplesPlacedOnId =
             meeples |> Dict.get id |> Maybe.withDefault []
 
+        combinedMeeples : List Meeple
         combinedMeeples =
             meeplesPlacedOnIdToReplace ++ meeplesPlacedOnId
     in
     -- optimisation: Ignore rewriting fields that are not supposed to have sideId
-    if maybeIdToReplace == Nothing || idToReplace == -1 || combinedMeeples == [] then
+    if maybeIdToReplace == Nothing || idToReplace == -1 || List.isEmpty combinedMeeples then
         meeples
 
     else
@@ -248,12 +256,14 @@ getAdjacentTileCloisterScores grid ( x, y ) =
 getFeatureOwners : Meeples -> SideId -> List PlayerIndex
 getFeatureOwners meeples sideId =
     let
+        playerNames : List PlayerIndex
         playerNames =
             meeples
                 |> Dict.get sideId
                 |> Maybe.withDefault []
                 |> List.map .owner
 
+        incrementCount : Maybe Int -> Maybe Int
         incrementCount maybeCount =
             case maybeCount of
                 Nothing ->
@@ -262,23 +272,22 @@ getFeatureOwners meeples sideId =
                 Just count ->
                     Just (count + 1)
 
+        counts : Dict PlayerIndex Int
         counts =
             List.foldl
                 (\name dict -> Dict.update name incrementCount dict)
                 Dict.empty
                 playerNames
 
+        maxCount : Int
         maxCount =
             counts
                 |> Dict.values
                 |> List.foldl max 0
-
-        playersWithMaxCount =
-            counts
-                |> Dict.filter (\_ count -> count == maxCount)
-                |> Dict.keys
     in
-    playersWithMaxCount
+    counts
+        |> Dict.filter (\_ count -> count == maxCount)
+        |> Dict.keys
 
 
 {-| Find the feature with the SideId
@@ -292,8 +301,7 @@ getSideIdFeature : SideId -> TileGrid -> Feature
 getSideIdFeature sideId tileGrid =
     tileGrid
         |> Dict.values
-        |> List.map (\tile -> [ tile.north, tile.east, tile.south, tile.west ])
-        |> List.concat
+        |> List.concatMap (\tile -> [ tile.north, tile.east, tile.south, tile.west ])
         |> List.filter (\side -> side.sideId == sideId)
         |> List.head
         |> Maybe.map (\side -> side.sideFeature)
@@ -316,23 +324,27 @@ placeTile : Game -> Coordinate -> Game
 placeTile game ( x, y ) =
     let
         -- Update the tile to have correct new sideId
+        tileToPlace : Tile
         tileToPlace =
             updateSideIds (game.nextSideId + 1) game.tileToPlace
 
-        -- get adjacent tile sideIds
+        northernAdjacentSideId : Maybe SideId
         northernAdjacentSideId =
-            game.tileGrid |> Dict.get ( x, y + 1 ) |> Maybe.andThen (\t -> Just t.south.sideId)
+            game.tileGrid |> Dict.get ( x, y + 1 ) |> Maybe.map (\tile -> tile.south.sideId)
 
+        easternAdjacentSideId : Maybe SideId
         easternAdjacentSideId =
-            game.tileGrid |> Dict.get ( x + 1, y ) |> Maybe.andThen (\t -> Just t.west.sideId)
+            game.tileGrid |> Dict.get ( x + 1, y ) |> Maybe.map (\tile -> tile.west.sideId)
 
+        southernAdjacentSideId : Maybe SideId
         southernAdjacentSideId =
-            game.tileGrid |> Dict.get ( x, y - 1 ) |> Maybe.andThen (\t -> Just t.north.sideId)
+            game.tileGrid |> Dict.get ( x, y - 1 ) |> Maybe.map (\tile -> tile.north.sideId)
 
+        westernAdjacentSideId : Maybe SideId
         westernAdjacentSideId =
-            game.tileGrid |> Dict.get ( x - 1, y ) |> Maybe.andThen (\t -> Just t.east.sideId)
+            game.tileGrid |> Dict.get ( x - 1, y ) |> Maybe.map (\tile -> tile.east.sideId)
 
-        -- Place tile and update sideIds
+        tileGrid : TileGrid
         tileGrid =
             game.tileGrid
                 |> Dict.insert ( x, y ) tileToPlace
@@ -341,6 +353,7 @@ placeTile game ( x, y ) =
                 |> replaceTileSideId southernAdjacentSideId tileToPlace.south.sideId
                 |> replaceTileSideId westernAdjacentSideId tileToPlace.west.sideId
 
+        meeples : Meeples
         meeples =
             game.meeples
                 |> replaceMeepleSideId northernAdjacentSideId tileToPlace.north.sideId
@@ -370,15 +383,18 @@ Handles all of the surrounding logic related to placing a meeple:
 placeMeeple : Game -> MeeplePosition -> Game
 placeMeeple game position =
     let
+        meepleToPlace : Meeple
         meepleToPlace =
             { owner = game.currentPlayer
             , coordinates = game.lastPlacedTile
             , position = position
             }
 
+        lastPlacedTile : Tile
         lastPlacedTile =
             getLastPlacedTile game
 
+        addedMeeples : Dict SideId (List Meeple)
         addedMeeples =
             case position of
                 North ->
@@ -399,6 +415,7 @@ placeMeeple game position =
                 Skip ->
                     game.meeples
 
+        finishedFeatureScores : List ( SideId, Score )
         finishedFeatureScores =
             getTileSideIds lastPlacedTile
                 |> Set.toList
@@ -406,6 +423,7 @@ placeMeeple game position =
                 |> List.map
                     (\sideId ->
                         let
+                            score : Score
                             score =
                                 countFeature game.tileGrid sideId
                         in
@@ -419,35 +437,40 @@ placeMeeple game position =
                 -- Append cloister score if exists
                 |> List.append (getAdjacentTileCloisterScores game.tileGrid game.lastPlacedTile)
 
+        meeples : Dict SideId (List Meeple)
         meeples =
             List.foldl (\( sideId, _ ) m -> Dict.remove sideId m) addedMeeples finishedFeatureScores
 
+        playerScores : Dict PlayerName Score
         playerScores =
             finishedFeatureScores
-                |> List.map
+                |> List.concatMap
                     (\( sideId, score ) ->
                         getFeatureOwners addedMeeples sideId
                             |> List.map (\playerIndex -> ( playerIndex, score ))
                     )
-                |> List.concat
                 |> List.foldl
                     (\( playerIndex, score ) scores ->
                         let
+                            playerName : PlayerName
                             playerName =
                                 game.players
                                     |> Array.get playerIndex
                                     -- Should never happen
                                     |> Maybe.withDefault ""
                         in
-                        Dict.update playerName (Maybe.andThen (\x -> Just (x + score))) scores
+                        Dict.update playerName (Maybe.map ((+) score)) scores
                     )
                     game.playerScores
 
+        currentPlayerName : PlayerName
         currentPlayerName =
             Array.get game.currentPlayer game.players |> Maybe.withDefault ""
 
+        returnMeeple : Meeple -> Dict PlayerName Int -> Dict PlayerName Int
         returnMeeple meeple tempPlayerMeeples =
             let
+                playerName : PlayerName
                 playerName =
                     game.players
                         |> Array.get meeple.owner
@@ -456,6 +479,7 @@ placeMeeple game position =
             in
             Dict.update playerName (Maybe.map <| (+) 1) tempPlayerMeeples
 
+        playerMeeples : Dict PlayerName Int
         playerMeeples =
             List.foldl
                 (\( sideId, _ ) tempPlayerMeeples ->
@@ -487,11 +511,13 @@ placeMeeple game position =
 finishGame : Game -> Game
 finishGame game =
     let
+        featureScores : List ( SideId, Score )
         featureScores =
             game.meeples
                 |> Dict.keys
                 |> List.map (\sideId -> ( sideId, countFeature game.tileGrid sideId ))
 
+        cloisterScores : List ( SideId, Score )
         cloisterScores =
             game.tileGrid
                 |> Dict.toList
@@ -500,32 +526,31 @@ finishGame game =
                         Maybe.map (\sideId -> ( sideId, countCloister game.tileGrid coordinates )) tile.cloister
                     )
 
-        -- Append cloister score if exists
-        --|> List.append (getAdjacentTileCloisterScores game.tileGrid game.lastPlacedTile)
+        playerScores : PlayerScores
         playerScores =
             featureScores
                 |> List.append cloisterScores
-                |> List.map
+                |> List.concatMap
                     (\( sideId, score ) ->
                         getFeatureOwners game.meeples sideId
                             |> List.map (\playerIndex -> ( playerIndex, score ))
                     )
-                |> List.concat
                 |> List.foldl
                     (\( playerIndex, score ) scores ->
                         let
+                            playerName : PlayerName
                             playerName =
                                 game.players
                                     |> Array.get playerIndex
                                     -- Should never happen
                                     |> Maybe.withDefault ""
                         in
-                        Dict.update playerName (Maybe.andThen (\x -> Just (x + score))) scores
+                        Dict.update playerName (Maybe.map ((+) score)) scores
                     )
                     game.playerScores
     in
     { game
         | playerScores = playerScores
-        , meeples = Dict.fromList []
+        , meeples = Dict.empty
         , gameState = FinishedState
     }

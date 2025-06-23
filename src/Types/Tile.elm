@@ -62,6 +62,7 @@ getAllSides tile =
 updateSideIds : SideId -> Tile -> Tile
 updateSideIds minimumSideId tile =
     let
+        updateSide : Side -> Side
         updateSide side =
             if side.sideId == -1 then
                 side

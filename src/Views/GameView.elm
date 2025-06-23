@@ -1,7 +1,7 @@
 module Views.GameView exposing (..)
 
 import Array
-import Dict
+import Dict exposing (Dict)
 import Helpers.FrontendHelpers exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (height, src, style, width)
@@ -14,21 +14,19 @@ import Types.Game exposing (..)
 import Types.GameState as GameState exposing (GameState(..))
 import Types.Meeple exposing (..)
 import Types.PlayerName exposing (PlayerName)
+import Types.Score exposing (Score)
 import Types.Tile exposing (..)
 
 
 renderGameView : PlayerName -> Game -> Bool -> Html FrontendMsg
 renderGameView playerName game debugMode =
     let
+        currentPlayerName : PlayerName
         currentPlayerName =
             game.players |> Array.get game.currentPlayer |> Maybe.withDefault ""
     in
     case game.gameState of
         PlaceTileState ->
-            let
-                coordinatesToBePlacedOn =
-                    getCoordinatesToBePlacedOn game.tileGrid game.tileToPlace
-            in
             div
                 [ style "display" "flex"
                 , style "flex-direction" "row"
@@ -58,6 +56,11 @@ renderGameView playerName game debugMode =
                         [ viewMeepleGrid game.tileGrid game.meeples ]
                      ]
                         ++ (if playerName == currentPlayerName then
+                                let
+                                    coordinatesToBePlacedOn : Set Coordinate
+                                    coordinatesToBePlacedOn =
+                                        getCoordinatesToBePlacedOn game.tileGrid game.tileToPlace
+                                in
                                 [ div
                                     [ style "position" "absolute"
                                     , style "top" "50%"
@@ -87,13 +90,6 @@ renderGameView playerName game debugMode =
                 ]
 
         PlaceMeepleState ->
-            let
-                lastPlacedTile =
-                    getLastPlacedTile game
-
-                positionsToBePlacedOn =
-                    getMeeplePositionsToBePlacedOn playerName game.playerMeeples game.meeples lastPlacedTile
-            in
             div
                 [ style "display" "flex"
                 , style "flex-direction" "row"
@@ -123,6 +119,15 @@ renderGameView playerName game debugMode =
                         [ viewMeepleGrid game.tileGrid game.meeples ]
                      ]
                         ++ (if playerName == currentPlayerName then
+                                let
+                                    lastPlacedTile : Tile
+                                    lastPlacedTile =
+                                        getLastPlacedTile game
+
+                                    positionsToBePlacedOn : List MeeplePosition
+                                    positionsToBePlacedOn =
+                                        getMeeplePositionsToBePlacedOn playerName game.playerMeeples game.meeples lastPlacedTile
+                                in
                                 [ div
                                     [ style "position" "absolute"
                                     , style "top" "50%"
@@ -192,21 +197,27 @@ renderGameView playerName game debugMode =
 viewTileGrid : TileGrid -> Html FrontendMsg
 viewTileGrid tileGrid =
     let
+        coordinates : List Coordinate
         coordinates =
             Dict.keys tileGrid
 
+        minX : Int
         minX =
             List.minimum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        maxX : Int
         maxX =
             List.maximum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        minY : Int
         minY =
             List.minimum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        maxY : Int
         maxY =
             List.maximum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        rows : List (Html FrontendMsg)
         rows =
             List.range (minY - 1) (maxY + 1)
                 |> List.reverse
@@ -238,6 +249,7 @@ renderTileCell coord grid =
     case Dict.get coord grid of
         Just tile ->
             let
+                rotationStyle : String
                 rotationStyle =
                     "rotate(" ++ String.fromInt (negate tile.rotation) ++ "deg)"
             in
@@ -256,21 +268,27 @@ renderTileCell coord grid =
 viewPlaceableGrid : TileGrid -> Set Coordinate -> Html FrontendMsg
 viewPlaceableGrid tileGrid coordinatesToBePlacedOn =
     let
+        coordinates : List Coordinate
         coordinates =
             Dict.keys tileGrid
 
+        minX : Int
         minX =
             List.minimum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        maxX : Int
         maxX =
             List.maximum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        minY : Int
         minY =
             List.minimum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        maxY : Int
         maxY =
             List.maximum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        rows : List (Html FrontendMsg)
         rows =
             List.range (minY - 1) (maxY + 1)
                 |> List.reverse
@@ -317,21 +335,27 @@ renderPlaceableCell coord coordinatesToBePlacedOn =
 viewMeeplePositionsOverlay : TileGrid -> Coordinate -> List MeeplePosition -> Html FrontendMsg
 viewMeeplePositionsOverlay tileGrid lastTilePlacedCoordinates positionsToBePlacedOn =
     let
+        coordinates : List Coordinate
         coordinates =
             Dict.keys tileGrid
 
+        minX : Int
         minX =
             List.minimum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        maxX : Int
         maxX =
             List.maximum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        minY : Int
         minY =
             List.minimum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        maxY : Int
         maxY =
             List.maximum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        rows : List (Html FrontendMsg)
         rows =
             List.range (minY - 1) (maxY + 1)
                 |> List.reverse
@@ -402,24 +426,31 @@ renderOverlayCell coordinates lastTilePlacedCoordinates positionsToBePlacedOn =
 viewMeepleGrid : TileGrid -> Meeples -> Html FrontendMsg
 viewMeepleGrid tileGrid meeples =
     let
+        meepleCoordinates : Dict Coordinate Meeple
         meepleCoordinates =
             toMeepleCoordinates meeples
 
+        coordinates : List Coordinate
         coordinates =
             Dict.keys tileGrid
 
+        minX : Int
         minX =
             List.minimum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        maxX : Int
         maxX =
             List.maximum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        minY : Int
         minY =
             List.minimum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        maxY : Int
         maxY =
             List.maximum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        rows : List (Html FrontendMsg)
         rows =
             List.range (minY - 1) (maxY + 1)
                 |> List.reverse
@@ -511,21 +542,27 @@ renderMeepleCircle position positionsToBePlacedOn =
 viewDebugOverlay : TileGrid -> Html FrontendMsg
 viewDebugOverlay tileGrid =
     let
+        coordinates : List Coordinate
         coordinates =
             Dict.keys tileGrid
 
+        minX : Int
         minX =
             List.minimum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        maxX : Int
         maxX =
             List.maximum (List.map Tuple.first coordinates) |> Maybe.withDefault 0
 
+        minY : Int
         minY =
             List.minimum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        maxY : Int
         maxY =
             List.maximum (List.map Tuple.second coordinates) |> Maybe.withDefault 0
 
+        rows : List (Html FrontendMsg)
         rows =
             List.range (minY - 1) (maxY + 1)
                 |> List.reverse
@@ -627,12 +664,15 @@ renderSideBar game yourPlayerName =
                     |> List.map
                         (\playerIndex ->
                             let
+                                playerName : PlayerName
                                 playerName =
                                     Array.get playerIndex game.players |> Maybe.withDefault ""
 
+                                playerScore : Score
                                 playerScore =
                                     Dict.get playerName game.playerScores |> Maybe.withDefault 0
 
+                                availableMeeples : Int
                                 availableMeeples =
                                     Dict.get playerName game.playerMeeples |> Maybe.withDefault 0
                             in

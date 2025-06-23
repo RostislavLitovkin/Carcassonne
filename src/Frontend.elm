@@ -1,17 +1,10 @@
 module Frontend exposing (Model, app)
 
-import Helpers.FrontendHelpers exposing (..)
-import Helpers.GameLogic exposing (..)
-import Helpers.TileMapper exposing (..)
 import Html exposing (Html)
-import Lamdera exposing (sendToBackend)
+import Lamdera exposing (Document, Key, Url, UrlRequest, sendToBackend)
 import String
 import Types exposing (..)
-import Types.Game exposing (..)
-import Types.GameState exposing (..)
-import Types.Meeple exposing (..)
 import Types.PlayerName exposing (..)
-import Types.Tile exposing (..)
 import Views.GameView exposing (renderGameView)
 import Views.PlayerLobbyView exposing (renderPlayerLobbyView)
 import Views.PlayerRegistrationView exposing (renderPlayerRegistrationView)
@@ -21,6 +14,7 @@ type alias Model =
     FrontendModel
 
 
+app : { init : Lamdera.Url -> Key -> ( Model, Cmd FrontendMsg ), view : Model -> Document FrontendMsg, update : FrontendMsg -> Model -> ( Model, Cmd FrontendMsg ), updateFromBackend : ToFrontend -> Model -> ( Model, Cmd FrontendMsg ), subscriptions : Model -> Sub FrontendMsg, onUrlRequest : UrlRequest -> FrontendMsg, onUrlChange : Url -> FrontendMsg }
 app =
     Lamdera.frontend
         { init = \_ _ -> init
@@ -55,6 +49,7 @@ update msg model =
 
         ( Register, FePlayerRegistration rest ) ->
             let
+                trimmedPlayerName : PlayerName
                 trimmedPlayerName =
                     String.trim rest.nameInput
             in
@@ -65,9 +60,6 @@ update msg model =
                 ( FeLobby { playerName = trimmedPlayerName, players = [] }
                 , sendToBackend <| RegisterPlayer trimmedPlayerName
                 )
-
-        ( ClearError, FePlayerRegistration rest ) ->
-            ( FePlayerRegistration { rest | error = Nothing }, Cmd.none )
 
         ( Kick playerName, _ ) ->
             ( model, sendToBackend <| KickPlayer playerName )

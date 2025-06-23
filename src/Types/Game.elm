@@ -53,6 +53,7 @@ Players list must not be empty
 initializeGame : List PlayerName -> Game
 initializeGame players =
     let
+        tileGrid : TileGrid
         tileGrid =
             initializeTileGrid
     in
@@ -124,17 +125,17 @@ initializeDrawStack =
         , List.repeat 8 2
         , List.repeat 4 3
         , List.repeat 2 4
-        , List.repeat 1 5
+        , List.singleton 5
         , List.repeat 3 6
-        , List.repeat 1 7
-        , List.repeat 1 8
+        , List.singleton 7
+        , List.singleton 8
         , List.repeat 2 9
         , List.repeat 3 10
         , List.repeat 5 11
         , List.repeat 3 12
         , List.repeat 2 13
         , List.repeat 2 14
-        , List.repeat 1 15
+        , List.singleton 15
         , List.repeat 2 16
         , List.repeat 3 17
         , List.repeat 2 18
@@ -142,5 +143,5 @@ initializeDrawStack =
         , List.repeat 3 20
         , List.repeat 3 21
         , List.repeat 4 22
-        , List.repeat 1 23
+        , List.singleton 23
         ]
