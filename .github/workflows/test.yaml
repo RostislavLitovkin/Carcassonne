@@ -30,14 +30,17 @@ jobs:
       - name: Install elm-review
         run: npm install -g elm-review
 
+      - name: Install lamdera
+        run: npm install -g lamdera
+
       - name: Run elm-review (code style/lint)
         run: elm-review
 
       - name: Compile Frontend
-        run: elm make src/Frontend.elm --output=/dev/null
+        run: lamdera make src/Frontend.elm --output=/dev/null
       
       - name: Compile Backend
-        run: elm make src/Backend.elm --output=/dev/null
+        run: lamdera make src/Backend.elm --output=/dev/null
 
       - name: Run unit tests
         run: npx elm-test --compiler lamdera
